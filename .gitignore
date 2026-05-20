@@ -1,0 +1,122 @@
+# ******************************************************************************
+# Copyright (c) 2026 RoXimn<roximn148@gmail.com>
+# This source code is licensed under the MIT license found in the
+# LICENSE.txt file in the root directory of this source tree.
+# ******************************************************************************
+
+# ==============================================================================
+# 1. PYTHON CORE & COMPILED ARTIFACTS
+# ==============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+bin/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Inline type hints (PEP 561)
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ==============================================================================
+# 2. VIRTUAL ENVIRONMENTS & DEPENDENCY MANAGERS
+# ==============================================================================
+# Standard virtual environments
+.venv/
+venv/
+ENV/
+env/
+# uv specific environment files
+.uv/
+
+# Pipenv
+.pipenv/
+Invenio.private
+
+# pip build cache
+.cache/pip/
+
+# ==============================================================================
+# 3. MAJOR IDEs & EDITORS
+# ==============================================================================
+# Visual Studio Code
+.vscode/
+
+# PyCharm / IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# Jupyter Notebooks checkpointing
+.ipynb_checkpoints
+
+# OS-specific files (macOS / Windows)
+.DS_Store
+Thumbs.db
+
+# ==============================================================================
+# 4. TESTING, COVERAGE, & QUALITY ASSURANCE
+# ==============================================================================
+# pytest and tox
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.spec/
+
+# Ruff, Flake8, and Black caches
+.ruff_cache/
+.cache/
+
+# ==============================================================================
+# 5. DOCUMENTATION (Sphinx)
+# ==============================================================================
+# Sphinx documentation build directory
+docs/build/
+docs/_build/
+
+# ==============================================================================
+# 6. RUNTIME DATA & SECRETS (CRITICAL)
+# ==============================================================================
+# Local environment variables containing secrets
+.env
+.env.local
+.env.*.local
+*.env
+!*.env.example
+
+# Databases
+*.db
+*.sqlite3
+
+# Log files
+*.log
+log/
+
+# ==============================================================================
+# 6. MISCELLANEOUS
+# ==============================================================================
