@@ -119,11 +119,12 @@ You can test the core functions interactively inside a Python shell. Open your t
 >>> ra = RomanAlfaz()
 
 >>> for w in 'kya haal he'.split():
-      d0, d1, d2 = ra.suggest(w, distance=2)
-      print(f"'{w}' ->")
-      print('  Exact matches: ', d0)
-      print('  One-Edit matches: ', d1)
-      print('  Two-Edit matches: ', d2)
+...     d0, d1, d2 = ra.suggest(w, distance=2)
+...     print(f"'{w}' ->")
+...     print('  Exact matches: ', d0)
+...     print('  One-Edit matches: ', d1)
+...     print('  Two-Edit matches: ', d2)
+...
 'kya' ->
   Exact matches:  [('کیا', 'KYA', 108414)]
   One-Edit matches:  [('کی', 'KY', 575545), ('کہ', 'KH', 237419), ('یہ', 'YH', 128103), ('کیا', 'KYA', 108414), ('کئے', 'KYE', 14970), ('کیے', 'KYE', 4976)]
