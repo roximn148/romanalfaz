@@ -1,28 +1,36 @@
 # RomanAlfaz (رومن الفاظ)
 
-RomanAlfaz is a dictionary based predictive roman-to-arabic script
-Urdu transliterator which takes a roman-script Urdu word and
-tries to match them to a predefined list of arabic-script words,
-prioritizing according to order of usage frequency.
+`RomanAlfaz` is a dictionary-based, predictive transliterator that 
+converts roman-script Urdu words into their arabic-script equivalents.
+The tool automatically ranks and prioritizes matching suggestions
+based on their real-world usage frequency.
 
-It uses transliteration algorithm proposed by 
-[Tafseer Ahmed](https://www.cle.org.pk/clt09/download/ahmed_translit.pdf "Roman to Urdu Transliteration using word list. (2009)")
-to convert the user provided roman-script Urdu text to
-an intermediate roman representation which tries to bridge
-the textual representation differences between arabic-script and roman-scripts
-for Urdu language. This intermediate representation is then used
-to look up the arabic-script representation of the Urdu word.
+### How it Works
 
-The `RomanAlfaz` internally uses [SymSpellPy](https://github.com/mammothb/symspellpy)
-for the dictionary lookup from a predefined curated list of Urdu words and their usage frequencies.
-The baseline word list is taken from [CLE Urdu 5000](https://www.cle.org.pk/software/ling_resources/UrduHighFreqWords.htm)
-most frequently used words. The internal workflow of the RomanAlfaz.
+The tool processes text using a specialized two-layer transformation workflow:
 
-1. Load a vocabulary list,
-2. provide a word in roman-script, and
-3. get the suggestions(s) in arabic-script.
+1. **Intermediate Representation**: It leverages the rule-based transliteration algorithm
+proposed by [Tafseer Ahmed](https://www.cle.org.pk/clt09/download/ahmed_translit.pdf "Roman to Urdu Transliteration using word list. (2009)").
+This converts the user's Roman Urdu input into an intermediate format
+designed to bridge the phonetic and structural spelling gaps between the two scripts.
+2. **Dictionary Lookup**: The engine passes this intermediate form to
+[SymSpellPy](https://github.com/mammothb/symspellpy) to execute
+an optimized dictionary search against a precompiled vocabulary list.
 
-![`RomanAlfaz` workflow chart](docs/romanalfaz.png)
+### Baseline Vocabulary
+
+The baseline included dictionary is built upon the [CLE Urdu 5000](https://www.cle.org.pk/software/ling_resources/UrduHighFreqWords.htm) dataset,
+which captures the most frequently used words in the Urdu language.
+
+### Core Workflow
+
+Using `RomanAlfaz` follows a simple three-step process:
+
+1. **Load**: Load a preconfigured arabic-script Urdu vocabulary and corresponding usage frequency.
+2. **Input**: Provide a roman-script Urdu word.
+3. **Output**: Receive a ranked list of predicted arabic-script suggestions.
+
+<img src="docs/romanalfaz.png" width="70%" alt="RomanAlfaz Core Workflow">
 
 ## Installation
 
@@ -82,18 +90,24 @@ If you are using `romanalfaz` as part of a larger project, you can add it to you
   ```
 ## Usage
 
-`romanalfaz` provides `RomanAlfaz` class as a single convenience point of conversion.
-Instantiating it uses the included baseline 5000-word vocabulary for use. The
-`RomanAlfaz.suggest` function expects words input, so it's the user's responsibility
-to tokenize larger texts into word tokens.
+The `romanalfaz` package provides the `RomanAlfaz` class as a centralized,
+easy-to-use interface for text transliterations. 
 
-`RomanAlfaz.suggest` output is always provided in three tiers (3-tuple),
-1. Exact,
-2. One-Edit, and
-3. Two-Edits.
+### Initialization and Input
+* **Built-in Vocabulary**: Instantiating the class automatically loads the include baseline, 5000-word vocabulary.
+* **Word-Level Inputs**: The `RomanAlfaz.suggest()` function processes _single words only_. It is
+your responsibility to tokenize sentences or larger paragraphs into individual words
+before passing them to the function.
 
-The edit `distance` parameter controls which tiers to look for, the lower tiers
-will always be looked for, and the corresponding results will be provided. 
+### Outputs and Edit Distance
+The RomanAlfaz.suggest() function always returns a **3-tuple** representing three matching tiers:
+1. Exact Matches,
+2. One-Edit Distance Matches, and
+3. Two-Edit Distance Matches
+
+The `distance` parameter determines the maximum search depth. The function
+will always include the lowest tiers as well and return results across
+all matching levels up to your configured limit.
 
 ### Interactive Examples
 
@@ -104,9 +118,22 @@ You can test the core functions interactively inside a Python shell. Open your t
 
 >>> ra = RomanAlfaz()
 
->>> for w in 'kya hal he'.split():
-        print(f"'{w}' -> {ra.suggest(w, distance=0)}")
-'kya' -> ([('کیا', 'KYA', 108414)], [], [])
-'hal' -> ([('حل', 'HL', 7083), ('حال', 'HAL', 4893), ('ہال', 'HAL', 936), ('ہل', 'HL', 378)], [], [])
-'he' -> ([('ہے', 'HE', 466908)], [], [])
+>>> for w in 'kya haal he'.split():
+      d0, d1, d2 = ra.suggest(w, distance=2)
+      print(f"'{w}' ->")
+      print('  Exact matches: ', d0)
+      print('  One-Edit matches: ', d1)
+      print('  Two-Edit matches: ', d2)
+'kya' ->
+  Exact matches:  [('کیا', 'KYA', 108414)]
+  One-Edit matches:  [('کی', 'KY', 575545), ('کہ', 'KH', 237419), ('یہ', 'YH', 128103), ('کیا', 'KYA', 108414), ('کئے', 'KYE', 14970), ('کیے', 'KYE', 4976)]
+  Two-Edit matches:  []
+'haal' ->
+  Exact matches:  [('حال', 'HAL', 4893), ('ہال', 'HAL', 936), ('حائل', 'HAYL', 316)]
+  One-Edit matches:  [('خیال', 'KHYAL', 10033), ('حال', 'HAL', 4893), ('حیات', 'HYAT', 2438), ('ہال', 'HAL', 936), ('سیال', 'SYAL', 321), ('حائل', 'HAYL', 316)]
+  Two-Edit matches:  [('حاصل', 'HASL', 25881), ('حالات', 'HALAT', 6537), ('حال', 'HAL', 4893), ('حامل', 'HAML', 2227), ('آل', 'AAL', 1014), ('ہال', 'HAL', 936)]
+'he' ->
+  Exact matches:  [('ہے', 'HE', 466908)]
+  One-Edit matches:  []
+  Two-Edit matches:  []
 ```
