@@ -7,24 +7,34 @@
 .. include:: <isonum.txt>
 
 RomanAlfaz (رومن الفاظ) documentation
-======================================
+#####################################
 
-RomanAlfaz is a dictionary based predictive roman-to-arabic script
-Urdu transliterator which takes a roman transliterated Urdu word and
-tries to predict what the expected complete word would be from
-a predefined list of matching words in order of usage frequency.
+`RomanAlfaz` is a dictionary-based, predictive transliterator that
+converts roman-script Urdu words into their arabic-script equivalents.
+The tool automatically ranks and prioritizes matching suggestions
+based on their real-world usage frequency.
 
-It uses transliteration algorithm proposed by Tafseer Ahmed [#]_
-to convert the user provided roman script Urdu text to
-an intermediate roman representation which bridges
-the textual representation differences between arabic and roman scripts
-when writing Urdu. This intermediate representation is then used
-to lookup the arabic script representation of the Urdu word.
+How it Works
+************
+The tool processes text using a specialized two-layer transformation workflow:
 
-The RomanAlfaz internally uses SymSpellPy_ for the dictionary lookup from
-a predefined curated list of Urdu words and their usage frequencies.
-The initial word list is taken from CLE Urdu 5000 most frequently used words [#]_.
-The workflow is shown in the :ref:`figure<romanalfaz-workflow>` below.
+1. **Intermediate Representation**: It leverages the rule-based transliteration algorithm
+proposed by Tafseer Ahmed [#]_.
+This converts the user's Roman Urdu input into an intermediate format
+designed to bridge the phonetic and structural spelling gaps between the two scripts.
+
+2. **Dictionary Lookup**: The engine passes this intermediate form to
+SymSpellPy_ to execute
+an optimized dictionary search against a precompiled vocabulary list.
+
+Baseline Vocabulary
+*******************
+
+The baseline included dictionary is built upon the CLE Urdu 5000 dataset [#]_,
+which captures the most frequently used words in the Urdu language.
+
+Core Workflow
+*************
 
 .. _romanalfaz-workflow:
 
