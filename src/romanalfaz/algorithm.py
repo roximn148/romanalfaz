@@ -75,7 +75,7 @@ from arabic-script to roman-script for word list lookup.
 
 
 # ******************************************************************************
-def tafseerUrduAr2Rm(word: str) -> tuple[str, int]:
+def tafseerUrduAr2Rm(word: str, keep: bool = True) -> tuple[str, int]:
     """
     Converts a string containing Urdu text in arabic-script to intermediate roman-script.
 
@@ -88,14 +88,17 @@ def tafseerUrduAr2Rm(word: str) -> tuple[str, int]:
 
     Args:
         word (str): The input string containing Urdu text in arabic-script.
+        keep (bool): To keep the undefined characters in the output text, or skip them.
+            Default is ``True``.
 
     Returns:
         tuple[str, int]: A tuple containing two elements:
 
         - str: The fully romanized string with tokens separated by spaces.
         - int: The count of undefined characters encountered during conversion.
-          Characters not found in the encoding map are kept as-is and increment
-          this counter.
+          Characters not found in the encoding map can be optionally kept as-is
+          in the output, however, this counter reflects how many were in the input
+          after normalization, irrespective of the output.
 
     Raises:
         AssertionError: If the input `word` is not a ``str`` instance.
@@ -117,10 +120,12 @@ def tafseerUrduAr2Rm(word: str) -> tuple[str, int]:
         ('HE', 0)
         >>> tafseerUrduAr2Rm('شہرت')
         ('SHHRT', 0)
+        :param word:
+        :param keep:
     """
     assert isinstance(word, str), f"Expected string type, got {type(word)}"
 
-    # Normalize whitespace and split the input into individual tokens
+    # Normalize the input and split the input into individual tokens
     tokens = normalize(word).split(' ')
 
     # If no tokens exist after normalization, return empty strings/counts
@@ -144,8 +149,8 @@ def tafseerUrduAr2Rm(word: str) -> tuple[str, int]:
             if char in URDU_ARABIC2ROMAN_ENCODING_MAP:
                 romanizedToken += URDU_ARABIC2ROMAN_ENCODING_MAP[char]
             else:
-                # If a character is not in the map, keep it as-is (pass-through)
-                romanizedToken += char
+                if keep: # If a character is not in the map, keep it as-is (pass-through)
+                    romanizedToken += char
                 undefCount += 1
 
         romanizedTokens.append(romanizedToken)

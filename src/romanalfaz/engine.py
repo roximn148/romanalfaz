@@ -133,6 +133,7 @@ class Vocabulary:
         assert len(filename) > 0
         assert isinstance(sep, str)
         assert len(sep) == 1
+        assert not sep.isdigit(), "Seperator cannot be a digit"
 
         with open(filename, "w", encoding="utf-8") as sym:
             # Iterate through most common words to ensure high-frequency items come first
@@ -156,6 +157,7 @@ class Vocabulary:
         assert len(filename) > 0
         assert isinstance(sep, str)
         assert len(sep) == 1
+        assert not sep.isdigit(), "Seperator cannot be a digit"
 
         newVocab = cls()
         with open(filename, 'r', encoding="utf-8") as f:
