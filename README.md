@@ -19,7 +19,7 @@ an optimized dictionary search against a precompiled vocabulary list.
 
 ### Baseline Vocabulary
 
-The baseline included dictionary is built upon the [CLE Urdu 5000](https://www.cle.org.pk/software/ling_resources/UrduHighFreqWords.htm) dataset,
+The baseline included dictionary is built upon the [CLE Urdu 5000 words](https://www.cle.org.pk/software/ling_resources/UrduHighFreqWords.htm) dataset,
 which captures the most frequently used words in the Urdu language.
 
 ### Core Workflow

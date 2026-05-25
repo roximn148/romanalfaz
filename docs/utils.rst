@@ -4,8 +4,9 @@
    LICENSE.txt file in the root directory of this source tree.
    *****************************************************************************
 
+********************************************************************************
 Normalization
-=============
+********************************************************************************
 .. automodule:: romanalfaz.utils
    :members:
    :undoc-members:  # includes objects without docstrings

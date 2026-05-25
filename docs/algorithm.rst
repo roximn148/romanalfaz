@@ -4,24 +4,29 @@
    LICENSE.txt file in the root directory of this source tree.
    *****************************************************************************
 
+********************************************************************************
 Tafseer Algorithm
-================================================================================
+********************************************************************************
 This section consists of two parts,
 
-- The Algorithm_ internal details with explanations of each step, and
-- its Implementation_ in the `RomanAlfaz` package.
+- The :ref:`algorithm's<TafseerAlgorithmDetailsSection>` internal details with explanations of each step, and
+- its :ref:`implementation<AlgorithmImplementationSection>` in the `romanalfaz` package.
 
 --------------------------------------------------------------------------------
 
+.. _TafseerAlgorithmDetailsSection:
+
 Algorithm
-+++++++++
+================================================================================
 .. include:: ../src/romanalfaz/tafseer.ipynb
    :parser: myst_nb.docutils_
 
 --------------------------------------------------------------------------------
 
+.. _AlgorithmImplementationSection:
+
 Implementation
-++++++++++++++
+================================================================================
 .. automodule:: romanalfaz.algorithm
    :members:
    :undoc-members:  # includes objects without docstrings

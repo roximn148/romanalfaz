@@ -4,9 +4,9 @@
    LICENSE.txt file in the root directory of this source tree.
    *****************************************************************************
 
+********************************************************************************
 RomanAlfaz Engine
-=================
-
+********************************************************************************
 .. automodule:: romanalfaz.engine
    :members:
    :undoc-members:  # includes objects without docstrings
@@ -19,7 +19,7 @@ RomanAlfaz Engine
    :align: center
    :figwidth: 100%
 
-   The internal workflow of the ``RomanAlfaz.suggest``.
+   The internal workflow of the `RomanAlfaz.suggest`.
 
    (1) Encode the roman-script input. (2) Get a suggestions list
    from `SymSpell` for each encoding of the roman-script word. (3) Separate
