@@ -1,6 +1,6 @@
 # RomanAlfaz (رومن الفاظ)
 
-`RomanAlfaz` is a dictionary-based, predictive transliterator that 
+`RomanAlfaz` is a dictionary-based, predictive transliterator that
 converts roman-script Urdu words into their arabic-script equivalents.
 The tool automatically ranks and prioritizes matching suggestions
 based on their real-world usage frequency.
@@ -31,6 +31,10 @@ Using `RomanAlfaz` follows a simple three-step process:
 3. **Output**: Receive a ranked list of predicted arabic-script suggestions.
 
 <img src="docs/romanalfaz.png" width="70%" alt="RomanAlfaz Core Workflow">
+
+## Documentation
+
+The latest full documentation, installation guide, and API reference is available [**online**](https://romanalfaz.readthedocs.io/en/latest/).
 
 ## Installation
 
@@ -91,7 +95,7 @@ If you are using `romanalfaz` as part of a larger project, you can add it to you
 ## Usage
 
 The `romanalfaz` package provides the `RomanAlfaz` class as a centralized,
-easy-to-use interface for text transliterations. 
+easy-to-use interface for text transliterations.
 
 ### Initialization and Input
 * **Built-in Vocabulary**: Instantiating the class automatically loads the include baseline, 5000-word vocabulary.
