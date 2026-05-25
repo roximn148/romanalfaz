@@ -42,7 +42,8 @@ larger paragraphs into individual words before passing them to the function.
 Outputs and Edit Distance
 -------------------------
 The :py:meth:`~romanalfaz.engine.RomanAlfaz.suggest` function always returns
-a **3-tuple** representing three matching tiers:
+a **3-tuple** representing three lists of :py:class:`~romanalfaz.engine.Suggestion`
+in each of the following matching tiers:
 
 1. Exact Matches,
 2. One-Edit Distance Matches, and
@@ -67,10 +68,10 @@ instead of just a single result or a large number of results.
     ra = romanalfaz.RomanAlfaz()
 
     # Retrieve the top 3 best matching Arabic-script predictions
-    suggestions = ra.suggest("kam", maxPredictions=3)
+    suggestions, _, _ = ra.suggest("kam", maxPredictions=3)
 
     for item in suggestions:
-        print(f"Word: {item[0]} | Frequency: {item[2]}")
+        print(f"Word: {item.arabic} | Frequency: {item.frequency}")
 
 
 Batch Transliteration
