@@ -176,19 +176,16 @@ class Vocabulary:
 
 # ******************************************************************************
 class Suggestion(NamedTuple):
-    """Urdu transliteration suggestion pairing Arabic script to encoded Roman.
-
-    Attributes:
-        arabic (str): The original word in Arabic script.
-        encodedRoman (str): The intermediate encoded Roman representation.
-        frequency (int): The usage count of this specific word.
-    """
+    """Urdu transliteration suggestion pairing Arabic script to encoded Roman."""
     arabic: str
+    """(str): The original word in Arabic script."""
     encodedRoman: str
+    """(str): The intermediate encoded Roman representation."""
     frequency: int
+    """(int): The usage count of this specific word."""
 
     def __str__(self) -> str:
-        return f"{self.arabic} [{self.frequency:,}]: {self.encodedRoman}"
+        return f"{self.arabic}:{self.encodedRoman} [{self.frequency:}]"
 
     def __repr__(self) -> str:
         return (f"Suggestion(arabic={self.arabic!r}, "
@@ -272,7 +269,10 @@ class RomanAlfaz:
             # Register the encoded roman-script word in SymSpell with its frequency count
             self.symSpell.create_dictionary_entry(encRomanWord, freq)
 
-            # Store the mapping: encRomanWord -> Set of (ArabicWord, Frequency) tuples
+            # ------------------------------------------------------------------
+            ##########################  DO NOT REMOVE  #########################
+            # ------------------------------------------------------------------
+            # This is an explanation of the use of the defaultdict
             # (50, 'hello', 'hallo'),
             # (20, 'hello', 'hallo'),
             # (10, 'world', 'alard')
@@ -286,6 +286,9 @@ class RomanAlfaz:
             #     'hello': {('hallo', 50), ('hallo', 20)},
             #     'world': {('alard', 10)}
             # }
+            # ------------------------------------------------------------------
+
+            # Store the mapping: encRomanWord -> Set of (ArabicWord, Frequency) tuples
             self.reverseMapping[encRomanWord].add((normArabicWord, freq))
 
     # **************************************************************************
@@ -305,8 +308,8 @@ class RomanAlfaz:
 
         Returns:
             tuple[list, list, list]: A tuple containing three lists corresponding
-            to exact matches (s0), one-edit-distance matches (s1), and two-
-            edit-distance matches (s2). Empty lists are returned if no matches
+            to exact matches (index 0), one-edit-distance matches (index 1), and two-
+            edit-distance matches (index 2). Empty lists are returned if no matches
             exist for a specific distance tier.
 
         Raises:
@@ -351,14 +354,15 @@ class RomanAlfaz:
             romanWord (str): The roman-script word to transliterate.
             distance (int): Maximum edit distance to consider (default is 1).
             maxPredictions (int): Maximum number of unique suggestions per tier
-                before truncating the list (default is 5). ``None`` to return
+                before truncating the list (default is 5). Use ``None`` to get
                 all suggestions.
 
         Returns:
-            tuple[list, list, list]: A tuple containing three lists representing
-            exact matches, one-edit-distance matches, and two-edit-distance matches.
-            Each inner list contains words as tuples of
-            `(arabic-script, encoded-roman-script, frequency)`.
+            tuple[list[Suggestion], list[Suggestion], list[Suggestion]]: A tuple
+            containing three lists (in index order) exact matches, one-edit-distance
+            matches, and two-edit-distance matches. Each list in turn is a list
+            of :py:class:`Suggestion` items sorted in decreasing order
+            of frequency.
 
         Raises:
             AssertionError: If `romanWord` is not a string.
