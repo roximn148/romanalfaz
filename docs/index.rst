@@ -6,36 +6,41 @@
 
 .. include:: <isonum.txt>
 
+################################################################################
 RomanAlfaz (رومن الفاظ) documentation
-#####################################
-
-`RomanAlfaz` is a dictionary-based, predictive transliterator that
+################################################################################
+`romanalfaz` is a dictionary-based, predictive transliterator that
 converts roman-script Urdu words into their arabic-script equivalents.
 The tool automatically ranks and prioritizes matching suggestions
 based on their real-world usage frequency.
 
 How it Works
-************
+================================================================================
 The tool processes text using a specialized two-layer transformation workflow:
 
-1. **Intermediate Representation**: It leverages the rule-based transliteration algorithm
-proposed by Tafseer Ahmed [#]_.
-This converts the user's Roman Urdu input into an intermediate format
-designed to bridge the phonetic and structural spelling gaps between the two scripts.
+1. **Intermediate Representation**: It leverages the rule-based transliteration
+algorithm proposed by Tafseer Ahmed [#]_. This converts the user's roman-script
+Urdu input into an intermediate format designed to bridge the phonetic and
+structural spelling gaps between the two scripts.
 
-2. **Dictionary Lookup**: The engine passes this intermediate form to
-SymSpellPy_ to execute
-an optimized dictionary search against a precompiled vocabulary list.
+2. **Dictionary Lookup**: The engine passes this intermediate form to SymSpellPy_
+to execute an optimized dictionary search against a precompiled vocabulary list.
+
+..  [#] Roman to Urdu Transliteration using word list. (2009)
+    https://cle.org.pk/clt09/download/ahmed_translit.pdf
+..  _SymSpellPy: https://github.com/mammothb/symspellpy
 
 Baseline Vocabulary
-*******************
+================================================================================
 
-The baseline included dictionary is built upon the CLE Urdu 5000 dataset [#]_,
+The baseline included word list is built upon the CLE's Urdu 5000 words dataset [#]_,
 which captures the most frequently used words in the Urdu language.
 
-Core Workflow
-*************
+..  [#] Urdu 5000 most Frequently Used Words
+    https://www.cle.org.pk/software/ling_resources/UrduHighFreqWords.htm
 
+Core Workflow
+================================================================================
 .. _romanalfaz-workflow:
 
 .. figure:: romanalfaz.png
@@ -51,24 +56,19 @@ Core Workflow
 
    **Blue** arrows represent *Arabic* script and **Red** arrows represent *Roman* script.
 
-..  [#] Roman to Urdu Transliteration using word list. (2009)
-    https://cle.org.pk/clt09/download/ahmed_translit.pdf
-..  [#] Urdu 5000 most Frequently Used Words
-    https://www.cle.org.pk/software/ling_resources/UrduHighFreqWords.htm
-..  _SymSpellPy: https://github.com/mammothb/symspellpy
-
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
-   algorithm
-   engine
-   utils
+   installation
+   quickstart
+   usage
+   reference
 
 
 Indices and tables
-==================
+================================================================================
 
 * :ref:`genindex`
 * :ref:`modindex`
