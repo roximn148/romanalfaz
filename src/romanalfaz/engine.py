@@ -12,6 +12,7 @@ package.
 from collections import Counter, defaultdict
 from itertools import chain
 from pathlib import Path
+from typing import NamedTuple
 
 from symspellpy import SymSpell, Verbosity
 from symspellpy.suggest_item import SuggestItem
@@ -174,6 +175,28 @@ class Vocabulary:
 
 
 # ******************************************************************************
+class Suggestion(NamedTuple):
+    """Urdu transliteration suggestion pairing Arabic script to encoded Roman.
+
+    Attributes:
+        arabic (str): The original word in Arabic script.
+        encodedRoman (str): The intermediate encoded Roman representation.
+        frequency (int): The usage count of this specific word.
+    """
+    arabic: str
+    encodedRoman: str
+    frequency: int
+
+    def __str__(self) -> str:
+        return f"{self.arabic} [{self.frequency:,}]: {self.encodedRoman}"
+
+    def __repr__(self) -> str:
+        return (f"Suggestion(arabic={self.arabic!r}, "
+                f"encodedRoman={self.encodedRoman!r}, "
+                f"frequency={self.frequency!r})")
+
+
+# ******************************************************************************
 class RomanAlfaz:
     """
     `RomanAlfaz` facilitates fuzzy matching between input roman-script
@@ -316,7 +339,7 @@ class RomanAlfaz:
             return s0, s1, s2
 
     # **************************************************************************
-    def suggest(self, romanWord: str, distance: int = 1, maxPredictions: int | None = 5) -> tuple[list, list, list]:
+    def suggest(self, romanWord: str, distance: int = 1, maxPredictions: int | None = 5) -> tuple[list[Suggestion], list[Suggestion], list[Suggestion]]:
         """
         Generates a ranked list of suggested arabic-script Urdu words based on
         roman-script input. This method performs the fuzzy lookup and returns
@@ -388,24 +411,24 @@ class RomanAlfaz:
         s0 = getSuggestionsTier(suggestionsList, tier=0, atmost=maxPredictions)
         if s0:
             # Enrich results with original Roman spellings and frequencies from reverse mapping
-            s0 = [(wd, sg.term, fr) for sg in s0
+            s0 = [Suggestion(wd, sg.term, fr) for sg in s0
                   for (wd, fr) in self.reverseMapping.get(sg.term, set())]
             # Final sort by frequency to ensure highest usage words appear first
-            s0 = sorted(s0, key=lambda item: item[2], reverse=True)
+            s0 = sorted(s0, key=lambda item: item.frequency, reverse=True)
 
         # Process One-Edit Matches (Distance 1)
         s1 = getSuggestionsTier(suggestionsList, tier=1, atmost=maxPredictions)
         if s1:
-            s1 = [(wd, sg.term, fr) for sg in s1
+            s1 = [Suggestion(wd, sg.term, fr) for sg in s1
                   for (wd, fr) in self.reverseMapping.get(sg.term, set())]
-            s1 = sorted(s1, key=lambda item: item[2], reverse=True)
+            s1 = sorted(s1, key=lambda item: item.frequency, reverse=True)
 
         # Process Two-Edit Matches (Distance 2)
         s2 = getSuggestionsTier(suggestionsList, tier=2, atmost=maxPredictions)
         if s2:
-            s2 = [(wd, sg.term, fr) for sg in s2
+            s2 = [Suggestion(wd, sg.term, fr) for sg in s2
                   for (wd, fr) in self.reverseMapping.get(sg.term, set())]
-            s2 = sorted(s2, key=lambda item: item[2], reverse=True)
+            s2 = sorted(s2, key=lambda item: item.frequency, reverse=True)
 
         return s0, s1, s2
 
