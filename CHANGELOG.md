@@ -8,14 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 ## [Unreleased]
 
 ### Added
+- Direct Roman2Arabic algorithm
+- Vocabulary management
+
+## [0.1.0a1] - 2026-05-25
 - RomanAlfaz roman Urdu transliterator
   - Tafseer Roman2Roman and Arabic2Roman algorithms
-  - Direct Roman2Arabic algorithm
-- Vocabulary management
 - Initial 5000 Word-Frequency Vocabulary
+- Initial documentation and ReadTheDocs config
 
-## [0.1.0a1] - 2026-05-20
-
+## [Initial Commit] - 2026-05-20
 ### Added
 - Initial project scaffolding and package setup.
 - Standard MIT License header comments to all source files.
