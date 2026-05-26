@@ -2,7 +2,7 @@
 
 `RomanAlfaz` is a dictionary-based, predictive transliterator that
 converts roman-script Urdu words into their arabic-script equivalents.
-The tool automatically ranks and prioritizes matching suggestions
+It automatically ranks and prioritizes matching suggestions
 based on their real-world usage frequency.
 
 ### How it Works
@@ -123,7 +123,7 @@ You can test the core functions interactively inside a Python shell. Open your t
 >>> ra = RomanAlfaz()
 
 >>> rmWord = "kitab"
->>> # Discard the empty one and two edit tiers, as distance is set to 0
+>>> # As distance is 0, received empty one and two-edit tier lists can be discarded.
 >>> suggestions, _, _ = ra.suggest(rmWord, distance=0)
 >>> # Take the first suggestion (if any) and use its arabic scripted word
 >>> arWord = suggestions[0].arabic if suggestions else ''
