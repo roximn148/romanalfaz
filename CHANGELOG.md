@@ -11,7 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - Direct Roman2Arabic algorithm
 - Vocabulary management
 
+## [0.1.0a2] - 2026-05-26
+### Added
+* MultiVocabulary Management to RomanAlfaz
+  * RomanAlfaz observes multiple Vocabulary instances 
+    while internally maintains a singular source of wordlist
+  * Added adding/removing Vocabulary instances
+    and responding to dynamic change in each instance itself.
+
 ## [0.1.0a1] - 2026-05-25
+### Added
 - RomanAlfaz roman Urdu transliterator
   - Tafseer Roman2Roman and Arabic2Roman algorithms
 - Initial 5000 Word-Frequency Vocabulary
