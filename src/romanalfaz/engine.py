@@ -411,29 +411,23 @@ class RomanAlfaz:
         # Perform lookup for each Arabic permutation of the input word
         suggestionsList = [self.dictLookup(word, distance=distance) for word in encRomanWords]
 
-        # Process Exact Matches (Distance 0)
-        s0 = getSuggestionsTier(suggestionsList, tier=0, atmost=maxPredictions)
-        if s0:
-            # Enrich results with original Roman spellings and frequencies from reverse mapping
-            s0 = [Suggestion(wd, sg.term, fr) for sg in s0
-                  for (wd, fr) in self.reverseMapping.get(sg.term, set())]
-            # Final sort by frequency to ensure highest usage words appear first
-            s0 = sorted(s0, key=lambda item: item.frequency, reverse=True)
+        # Process the three tiers
+        results = []
+        for tier in (0, 1, 2):
+            tierSuggestions = getSuggestionsTier(suggestionsList,
+                                                 tier=tier,
+                                                 atmost=maxPredictions)
+            if tierSuggestions:
+                tierSuggestions = [
+                    Suggestion(wd, sg.term, fr)
+                    for sg in tierSuggestions
+                    for (wd, fr) in self.reverseMapping.get(sg.term, set())
+                ]
+                tierSuggestions = sorted(tierSuggestions,
+                                         key=lambda item: item.frequency,
+                                         reverse=True)
+            results.append(tierSuggestions)
 
-        # Process One-Edit Matches (Distance 1)
-        s1 = getSuggestionsTier(suggestionsList, tier=1, atmost=maxPredictions)
-        if s1:
-            s1 = [Suggestion(wd, sg.term, fr) for sg in s1
-                  for (wd, fr) in self.reverseMapping.get(sg.term, set())]
-            s1 = sorted(s1, key=lambda item: item.frequency, reverse=True)
-
-        # Process Two-Edit Matches (Distance 2)
-        s2 = getSuggestionsTier(suggestionsList, tier=2, atmost=maxPredictions)
-        if s2:
-            s2 = [Suggestion(wd, sg.term, fr) for sg in s2
-                  for (wd, fr) in self.reverseMapping.get(sg.term, set())]
-            s2 = sorted(s2, key=lambda item: item.frequency, reverse=True)
-
-        return s0, s1, s2
+        return results[0], results[1], results[2]
 
 # ******************************************************************************
