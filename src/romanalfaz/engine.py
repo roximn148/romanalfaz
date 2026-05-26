@@ -12,7 +12,7 @@ package.
 from collections import Counter, defaultdict
 from itertools import chain
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Callable
 
 from symspellpy import SymSpell, Verbosity
 from symspellpy.suggest_item import SuggestItem
@@ -45,6 +45,13 @@ class Vocabulary:
         """
         self.counter = Counter(data) if data else Counter()
         self.completed = set()
+        self.onChangeCallbacks: list[Callable[[], None]] = []
+
+    # --------------------------------------------------------------------------
+    def notifyChanges(self):
+        """Triggers attached callbacks when internal state changes."""
+        for callback in self.onChangeCallbacks:
+            callback()
 
     # --------------------------------------------------------------------------
     def add(self, word: str, count: int = 1):
@@ -63,6 +70,7 @@ class Vocabulary:
         assert count >= 1
 
         self.counter[word] += count
+        self.notifyChanges()
 
     # --------------------------------------------------------------------------
     def remove(self, word: str):
@@ -70,13 +78,19 @@ class Vocabulary:
         assert isinstance(word, str)
         assert len(word) > 0
 
+        changed = False
         # Remove from frequency tracker only if it exists
         if word in self.counter:
             del self.counter[word]
+            changed = True
 
         # Remove from completion status only if marked as complete
         if word in self.completed:
             self.completed.remove(word)
+            changed = True
+
+        if changed:
+            self.notifyChanges()
 
     # --------------------------------------------------------------------------
     def replace(self, oldWord: str, newWord: str):
@@ -103,6 +117,8 @@ class Vocabulary:
                 self.completed.remove(oldWord)
                 self.completed.add(newWord)
 
+            self.notifyChanges()
+
     # --------------------------------------------------------------------------
     def setCompleted(self, word: str, isCompleted: bool):
         """Toggle a word's completion status.
@@ -119,6 +135,8 @@ class Vocabulary:
         else:
             # discard() prevents KeyError if the word wasn't in the set
             self.completed.discard(word)
+
+        self.notifyChanges()
 
     # --------------------------------------------------------------------------
     def save(self, filename: str, sep: str = '$'):
@@ -197,26 +215,36 @@ class Suggestion(NamedTuple):
 class RomanAlfaz:
     """
     `RomanAlfaz` facilitates fuzzy matching between input roman-script
-    Urdu transliteration and arabic-script Urdu words. It utilizes a
-    SymSpell engine loaded with a custom vocabulary to suggest corrections
-    based on edit distance.
+    Urdu transliteration and arabic-script Urdu words.It aggregates data from multiple source
+    'Vocabulary' instances at runtime, resolving cross-dictionary collisions
+    by summing word frequencies.
+
+    Using the Observer Pattern, it automatically listens for mutations (additions,
+    removals, modifications) within any registered Vocabulary and dynamically
+    recompiles its internal lookup indices to guarantee a live, accurate system state.
 
     Attributes:
-        symSpell (SymSpell): The underlying spell-checking instance.
-        reverseMapping (dict[str, set[tuple]]): A mapping between arabic-script words
-            and their roman-script counterparts and frequencies.
-        dictFilename (str | None): Path to the dictionary file for initialization.
+        symSpell (SymSpell): The underlying SymSpell engine instance used to perform
+            efficient, high-performance edit-distance lookups and spelling corrections.
+        reverseMapping (defaultdict[str, set[tuple[str, int]]]): A lookup table mapping
+            encoded Roman words to a set of their original native script Arabic variants
+            along with their aggregate frequencies. Used to resolve homonyms during queries.
+        vocabularies (list[Vocabulary]): A collection holding references to all
+            currently attached and monitored Vocabulary instances active in the system.
     """
-
-    def __init__(self, dictFilename: str | None = None):
+    def __init__(self, vocabularies: list[Vocabulary] | None = None):
         """
-        Initializes the RomanAlfaz instance by setting up the SymSpell engine
-        and loading the appropriate vocabulary dictionary.
+        Initializes the RomanAlfaz coordinator with optional starter vocabularies.
+
+        Sets up the underlying SymSpell fuzzy logic core, initializes the
+        structural reverse-mapping lookup, and hooks into any provided source
+        vocabularies to kick off the baseline index compilation.
 
         Args:
-            dictFilename (str | None): Optional path to a custom .sym file.
-                If not provided, defaults to the standard Urdu word list.
+            vocabularies (list[Vocabulary] | None): An optional collection of
+                Vocabulary instances to populate the search matrix immediately.
         """
+        # Initialize the underlying SymSpell engine used for edit-distance algorithms.
         self.symSpell = SymSpell()
 
         # Create a many-to-many mapping structure (specifically, a dictionary of sets)
@@ -229,67 +257,128 @@ class RomanAlfaz:
         # a single Roman word key without overwriting each other.
         self.reverseMapping: defaultdict = defaultdict(set)
 
-        # Resolve filename: use custom one if given, otherwise default
-        self.dictFilename = dictFilename or getDefaultWordsFilename()
+        # Holds references to all monitored Vocabulary instances active in the system.
+        self.vocabularies: list[Vocabulary] = []
 
-        # Load the vocabulary data into memory and initialize mappings
-        self.loadDictionary()
+        # Process and link incoming starter vocabularies if they are provided.
+        if vocabularies:
+            for vocab in vocabularies:
+                # addVocabulary handles tracking, callback attachments,
+                # and triggers the initial state compilation.
+                self.addVocabulary(vocab)
+        else:
+            # Fallback behavior when no specific vocabularies are passed:
+            # attempt to resolve and initialize using the default wordlist source.
+            try:
+                vocab = Vocabulary.load(getDefaultWordsFilename())
+            except Exception as e:
+                raise DictionaryNotFoundError(e)
+            else:
+                self.addVocabulary(vocab)
+            self.recompileLookup()
 
     # **************************************************************************
-    def loadDictionary(self) -> None:
+    def addVocabulary(self, vocab: Vocabulary) -> None:
         """
-        Loads frequency data from a SymSpell dictionary file.
+        Registers a new Vocabulary instance to be tracked by RomanAlfaz.
 
-        This method reads the .sym file, converts Roman-script words to their
-        Arabic-script equivalents using `tafseerUrduAr2Rm`, and populates both
-        the SymSpell instance for fast lookup and a reverse mapping for result
-        enrichment.
+        This method attaches the RomanAlfaz compilation manager as a listener
+        to the target vocabulary. Any future mutations to that vocabulary
+        will automatically trigger a lookup engine rebuild.
 
-        Raises:
-            DictionaryNotFoundError: If the specified dictionary file is missing or invalid.
+        Args:
+            vocab (Vocabulary): The vocabulary instance to start monitoring.
         """
-        try:
-            # Load vocabulary object from the .sym file
-            vocab = Vocabulary.load(self.dictFilename)
-        except Exception as e:
-            raise DictionaryNotFoundError(e)
+        # Guard clause: Prevent duplicate registrations which would cause
+        # identical data to be counted twice during aggregation.
+        if vocab not in self.vocabularies:
+            self.vocabularies.append(vocab)
+            # Register the internal recompile method as a change listener callback.
+            # When the vocabulary changes, it calls this function automatically.
+            vocab.onChangeCallbacks.append(self.recompileLookup)
+            # Instantly rebuild the engines to reflect the newly injected dataset.
+            self.recompileLookup()
 
+    # **************************************************************************
+    def removeVocabulary(self, vocab: Vocabulary) -> None:
+        """
+        Unregisters a monitored Vocabulary instance from RomanAlfaz.
+
+        This method detaches the callback listener, stops tracking the object,
+        and strips its entries out of the active runtime search engine.
+
+        Args:
+            vocab (Vocabulary): The vocabulary instance to stop monitoring.
+        """
+        # Guard clause: Ensure the vocabulary is currently tracked before
+        # attempting to remove it to avoid unexpected value errors.
+        if vocab in self.vocabularies:
+            self.vocabularies.remove(vocab)
+            # Detach the callback function to prevent ghost notifications
+            # and allow proper garbage collection of the vocabulary object.
+            if self.recompileLookup in vocab.onChangeCallbacks:
+                vocab.onChangeCallbacks.remove(self.recompileLookup)
+            # Recompile immediately to completely purge the unlinked
+            # vocabulary's words from the system.
+            self.recompileLookup()
+
+    # **************************************************************************
+    def recompileLookup(self) -> None:
+        """
+        Recompiles the unified lookup indices from all attached Vocabularies.
+
+        This method acts as a central data processor. It resets the internal
+        engines, flattens all attached source vocabularies, resolves multi-source
+        word collisions by summing their frequencies, and fully rebuilds both
+        the SymSpell fuzzy-search index and the Arabic reverse mapping.
+
+        Complexity:
+            O(N) where N is the total number of unique words across all tracked
+            Vocabulary instances.
+        """
+        # STAGE 1: Reset Internal Search Engines -------------------------------
         # Re-initialize SymSpell to ensure a clean state before adding entries
+        # Wiping previous data structures ensures dead records (e.g., deleted words)
+        # do not linger in memory after a vocabulary mutation.
         self.symSpell = SymSpell()
         self.reverseMapping.clear()
 
-        # Iterate through the most frequent words in the loaded vocabulary
-        for normArabicWord, freq in vocab.counter.most_common():
-            # Convert Roman input word to Arabic-script representation
-            encRomanWord, undef = tafseerUrduAr2Rm(normArabicWord)
+        # STAGE 2: Flatten & Sum Arabic script Word Frequencies ----------------
+        # Multiple dictionaries might contain the exact same Arabic word.
+        # Using Counter.update() merges them, automatically summing up their counts.
+        aggregateCounter: Counter[str] = Counter()
+        for vocab in self.vocabularies:
+            aggregateCounter.update(vocab.counter)
 
-            # Ensure conversion was successful (no undefined mappings)
+        # STAGE 3: Romanization & Homonym Mapping ------------------------------
+        # Different Arabic words can resolve to the exact same Romanized string.
+        # We track total Roman string frequency (critical for SymSpell ranking) and
+        # preserve individual Arabic origin variants inside a nested dictionary structure.
+        romanFreqCounter: Counter[str] = Counter()
+        rm2arMapping: defaultdict[str, dict[str, int]] = defaultdict(dict)
+
+        for arWord, freq in aggregateCounter.items():
+            # Convert native script to Romanized representation
+            encRomanWord, undef = tafseerUrduAr2Rm(arWord)
             assert undef == 0
 
-            # Register the encoded roman-script word in SymSpell with its frequency count
-            self.symSpell.create_dictionary_entry(encRomanWord, freq)
+            # Accumulate weight for the Roman word entry (used by SymSpell)
+            romanFreqCounter[encRomanWord] += freq
 
-            # ------------------------------------------------------------------
-            ##########################  DO NOT REMOVE  #########################
-            # ------------------------------------------------------------------
-            # This is an explanation of the use of the defaultdict
-            # (50, 'hello', 'hallo'),
-            # (20, 'hello', 'hallo'),
-            # (10, 'world', 'alard')
-            #
-            # mapping = defaultdict(set)
-            # for f, w, r in wordsList:
-            #     mapping[r].add((w, f))
-            #
-            # The resulting 'mapping' looks like this:
-            # {
-            #     'hello': {('hallo', 50), ('hallo', 20)},
-            #     'world': {('alard', 10)}
-            # }
-            # ------------------------------------------------------------------
+            # Record or increment the specific Arabic variant bound to this Roman word
+            if arWord not in rm2arMapping[encRomanWord]:
+                rm2arMapping[encRomanWord][arWord] = 0
+            rm2arMapping[encRomanWord][arWord] += freq
 
-            # Store the mapping: encRomanWord -> Set of (ArabicWord, Frequency) tuples
-            self.reverseMapping[encRomanWord].add((normArabicWord, freq))
+        # STAGE 4: Populate Operational Lookup Engines -------------------------
+        # Commit the computed structural matrices back into operational states.
+        for encRomanWord, combinedFreq in romanFreqCounter.items():
+            # Populate SymSpell dictionary with the total aggregated string frequency
+            self.symSpell.create_dictionary_entry(encRomanWord, combinedFreq)
+
+            # Hydrate the reverse mapping set for native script ranking inside suggest()
+            for arWord, freq in rm2arMapping[encRomanWord].items():
+                self.reverseMapping[encRomanWord].add((arWord, freq))
 
     # **************************************************************************
     def dictLookup(self, encRomanWord: str, *, distance: int) -> tuple[list[SuggestItem],

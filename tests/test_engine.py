@@ -6,7 +6,7 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-from romanalfaz.engine import Vocabulary
+from romanalfaz.engine import Vocabulary, RomanAlfaz
 
 
 # ******************************************************************************
@@ -172,5 +172,91 @@ class TestVocabulary:
         loadedV = Vocabulary.load(str(filepath), sep="$")
         assert loadedV.counter["نام$غلط"] == 4
         assert "نام$غلط" in loadedV.completed
+
+# ******************************************************************************
+class TestRomanAlfaz:
+
+    def testDefaultVocabularyLoadsWhenNoneProvided(self):
+        """Verify that RomanAlfaz loads the default dictionary if input is omitted."""
+        ra = RomanAlfaz(vocabularies=None)
+        assert len(ra.vocabularies) == 1
+        assert "KY" in ra.symSpell.words
+        assert ra.symSpell.words["KE"] == 743949
+
+    def testAddVocabularyUpdatesStateAndSumsCollisions(self):
+        """Verify that adding new vocabularies triggers compilation and combines frequencies."""
+        v1 = Vocabulary({"دنیا": 10, "وزیر": 5})
+        v2 = Vocabulary({"دنیا": 5, "ضرورت": 2})
+
+        ra = RomanAlfaz([v1])
+
+        # Assert initial states
+        assert ra.symSpell.words["DNYA"] == 10
+        assert "ZRORT" not in ra.symSpell.words
+
+        # Dynamically inject second vocabulary
+        ra.addVocabulary(v2)
+
+        # Ensure dynamic compilation combined fields and solved word collisions by summing frequencies
+        assert len(ra.vocabularies) == 2
+        assert ra.symSpell.words["DNYA"] == 15  # 10 + 5
+        assert ra.symSpell.words["WZYR"] == 5
+        assert ra.symSpell.words["ZRORT"] == 2
+
+    def testRemoveVocabularyPurgesAndRecalculates(self):
+        """Verify that removing a vocabulary drops its frequency weights immediately."""
+        v1 = Vocabulary({"دنیا": 10, "وزیر": 5})
+        v2 = Vocabulary({"دنیا": 5})
+
+        ra = RomanAlfaz([v1, v2])
+        assert ra.symSpell.words["DNYA"] == 15
+
+        # Remove the second vocabulary
+        ra.removeVocabulary(v2)
+
+        assert len(ra.vocabularies) == 1
+        assert ra.symSpell.words["DNYA"] == 10  # Reduced back down to v1's total
+        assert "v2" not in ra.vocabularies
+
+    def testVocabularyMutationsTriggerObserverUpdates(self):
+        """Verify that direct mutations on Vocabulary instances notify listeners dynamically."""
+        v1 = Vocabulary({"کتاب": 10})
+        ra = RomanAlfaz([v1])
+
+        assert ra.symSpell.words["KTAB"] == 10
+
+        # 1. Test Dynamic Addition
+        v1.add("کتاب", count=5)  # Increase frequency
+        assert ra.symSpell.words["KTAB"] == 15
+
+        v1.add("دنیا", count=3)   # Fresh item insertion
+        assert ra.symSpell.words["DNYA"] == 3
+
+        # 2. Test Dynamic Replacement
+        v1.replace("کتاب", "کلام")
+        assert "KTAB" not in ra.symSpell.words
+        assert ra.symSpell.words["KLAM"] == 15
+
+        # 3. Test Dynamic Removal
+        v1.remove("کلام")
+        assert "KLAM" not in ra.symSpell.words
+
+
+    def testHomonymCollisionMergingInReverseMapping(self):
+        """Verify that multiple different Arabic words resolving to the same Roman key merge correctly."""
+        # Imagine 'wordA' and 'wordB' map to identical Roman stems via simulated function overrides
+        v1 = Vocabulary({"کرون": 10})
+        v2 = Vocabulary({"کروں": 20, "کرون": 5})
+
+        ra = RomanAlfaz([v1, v2])
+
+        # Core engine gets the global cumulative weight across both strings (10 + 20 + 5)
+        assert ra.symSpell.words["KRON"] == 35
+
+        # Reverse matrix splits them up into descriptive keys with summed internal counts
+        reverseSet = ra.reverseMapping["KRON"]
+        assert ("کرون", 15) in reverseSet
+        assert ("کروں", 20) in reverseSet
+
 
 # ******************************************************************************
