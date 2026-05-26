@@ -17,7 +17,7 @@ You can simply import, instantiate the class and start using it.
 >>> ra = RomanAlfaz()
 
 >>> rmWord = "kitab"
->>> # Discard the empty one and two edit tiers, as provided distance is 0
+>>> # As distance is 0, received empty one and two-edit tier lists can be discarded.
 >>> suggestions, _, _ = ra.suggest(rmWord, distance=0)
 >>> # Take the first suggestion (if any) and use its arabic scripted word
 >>> arWord = suggestions[0].arabic if suggestions else ''
