@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ### Added
 - Direct Roman2Arabic algorithm
-- Vocabulary management
+* RomanAlfaz suggestion improvements
+  * getExactMatches and getBestMatch convenience methods
 
 ## [0.1.0a2] - 2026-05-26
 ### Added
