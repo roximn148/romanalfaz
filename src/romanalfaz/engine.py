@@ -519,4 +519,46 @@ class RomanAlfaz:
 
         return results[0], results[1], results[2]
 
+    # **************************************************************************
+    def getExactMatches(self, romanWord: str, maxPredictions: int | None = 5) -> list[Suggestion]:
+        """
+       Generates of suggested arabic-script Urdu words which match exactly with the
+       roman-script input.
+
+       Args:
+           romanWord (str): The roman-script word to transliterate.
+           maxPredictions (int): Maximum number of unique suggestions
+               to provide (default is 5). Use ``None`` to get
+               all suggestions.
+
+       Returns:
+           list[Suggestion]: A list of :py:class:`Suggestion` exact matching items
+           in order of word frequency.
+
+       Raises:
+           AssertionError: If `romanWord` is not a string.
+       """
+        suggestions, _, _ = self.suggest(romanWord, distance=1, maxPredictions=maxPredictions)
+        return suggestions
+
+
+    # **************************************************************************
+    def getBestMatch(self, romanWord: str) -> Suggestion | None:
+        """
+        Get single best arabic-script Urdu word suggestion for the roman-script input.
+
+        Args:
+           romanWord (str): The roman-script word to transliterate.
+
+        Returns:
+           Suggestion | None: Exact matching :py:class:`Suggestion` item
+           with the highest frequency. ``None`` is returned if no exact match is found.
+
+        Raises:
+           AssertionError: If `romanWord` is not a string.
+        """
+        suggestions = self.getExactMatches(romanWord, maxPredictions=None)
+        return suggestions[0] if suggestions else None
+
+
 # ******************************************************************************
