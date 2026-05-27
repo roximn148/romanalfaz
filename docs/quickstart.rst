@@ -16,13 +16,12 @@ You can simply import, instantiate the class and start using it.
 
 >>> ra = RomanAlfaz()
 
->>> rmWord = "kitab"
->>> # As distance is 0, received empty one and two-edit tier lists can be discarded.
->>> suggestions, _, _ = ra.suggest(rmWord, distance=0)
->>> # Take the first suggestion (if any) and use its arabic scripted word
->>> arWord = suggestions[0].arabic if suggestions else ''
->>> arWord
-'کتاب'
+>>> ra.getBestMatch('kitab')
+Suggestion(arabic='کتاب', encodedRoman='KTAB', frequency=4643)
+
+>>> ra.getExactMatches('kitab')
+[Suggestion(arabic='کتاب', encodedRoman='KTAB', frequency=4643),
+ Suggestion(arabic='کتب', encodedRoman='KTB', frequency=666)]
 
 >>> for rmWord in 'kya haal he'.split():
 ...    d0, d1, d2 = ra.suggest(rmWord, distance=2)
