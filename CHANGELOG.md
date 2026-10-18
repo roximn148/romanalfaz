@@ -7,8 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
-### Added
+## [0.1.0a4] - 2026-10-18
+
+## Planned
 - Direct Roman2Arabic algorithm
+
+### Added
+- Suggestion fields now carry defaults, so Suggestion() constructs the blank suggestion
+- Suggestion.isUndefined() method to detect undefined suggestions
+  (missing arabic word or zero frequency)
+
+### Changed
+- RomanAlfaz default dictionary loading now only wraps OSError and
+  ValueError into DictionaryNotFoundError
 
 ## [0.1.0a3] - 2026-05-26
 ### Added
