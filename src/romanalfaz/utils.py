@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ******************************************************************************
 #    Copyright (c) 2026 RoXimn <roximn148@gmail.com>
 #    This source code is licensed under the MIT license found in the
@@ -497,7 +496,7 @@ def normalizeUrduChars(text: str) -> str:
     # - If a character exists in URDU_VARIANT_REVERSAL_MAP, replace it with its base form.
     # - If not (e.g., spaces, punctuation, or other scripts), keep the original character
     #   using .get(c, c). This ensures non-Urdu characters are preserved unchanged.
-    text = "".join(map(lambda c: URDU_VARIANT_REVERSAL_MAP.get(c, c), text))
+    text = "".join(URDU_VARIANT_REVERSAL_MAP.get(c, c) for c in text)
 
     return text
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ******************************************************************************
 # Copyright (c) 2026 RoXimn <roximn148@gmail.com> Licensed under the MIT License
 # ******************************************************************************
@@ -6,7 +5,7 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-from romanalfaz.engine import Vocabulary, RomanAlfaz
+from romanalfaz.engine import RomanAlfaz, Suggestion, Vocabulary
 
 
 # ******************************************************************************
@@ -137,7 +136,7 @@ class TestVocabulary:
     @patch("builtins.open", new_callable=mock_open)
     def testSaveFileIoError(self, mockFile, populatedVocabulary):
         """Mocks file open behavior to simulate OS write faults and exceptions during file export operations."""
-        mockFile.side_effect = IOError("Disk Full Error")
+        mockFile.side_effect = OSError("Disk Full Error")
 
         with pytest.raises(IOError) as excInfo:
             populatedVocabulary.save("dummy.txt")
@@ -172,6 +171,36 @@ class TestVocabulary:
         loadedV = Vocabulary.load(str(filepath), sep="$")
         assert loadedV.counter["نام$غلط"] == 4
         assert "نام$غلط" in loadedV.completed
+
+# ******************************************************************************
+class TestSuggestion:
+
+    def testBlankConstructionWithDefaults(self):
+        """Verify that Suggestion() constructs the blank suggestion with default field values."""
+        blank = Suggestion()
+        assert blank.arabic == ""
+        assert blank.encodedRoman == ""
+        assert blank.frequency == 0
+        assert blank.isUndefined()
+
+    def testPartialConstructionFillsRemainingDefaults(self):
+        """Verify that constructing with a single field leaves the remaining fields at their defaults."""
+        s = Suggestion(arabic="کتاب")
+        assert s.encodedRoman == ""
+        assert s.frequency == 0
+
+    def testIsUndefinedWhenArabicEmptyOrFrequencyZero(self):
+        """Verify isUndefined is True when arabic is empty or frequency is zero, and False only when both are set."""
+        assert Suggestion().isUndefined()
+        assert Suggestion(arabic="کتاب").isUndefined()
+        assert Suggestion(frequency=1).isUndefined()
+        assert not Suggestion(arabic="کتاب", frequency=1).isUndefined()
+
+    def testExplicitFullConstructionUnchanged(self):
+        """Verify that the existing three-argument construction still works."""
+        s = Suggestion("کتاب", "KTAB", 4643)
+        assert s == Suggestion(arabic="کتاب", encodedRoman="KTAB", frequency=4643)
+        assert not s.isUndefined()
 
 # ******************************************************************************
 class TestRomanAlfaz:

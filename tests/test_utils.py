@@ -1,12 +1,16 @@
-# -*- coding: utf-8 -*-
 # ******************************************************************************
 # Copyright (c) 2026 RoXimn <roximn148@gmail.com> Licensed under the MIT License
 # ******************************************************************************
 import pytest
+
 from romanalfaz.utils import (
-    removeMarks, removeNonLetterChars, normalizeUrduChars,
-    LIGATURE_MAP, URDU_VARIANT_REVERSAL_MAP
+    LIGATURE_MAP,
+    URDU_VARIANT_REVERSAL_MAP,
+    normalizeUrduChars,
+    removeMarks,
+    removeNonLetterChars,
 )
+
 
 # ******************************************************************************
 class TestRemoveMarks:
@@ -158,7 +162,7 @@ class TestNormalizeUrduChars:
         """Test that keys present in LIGATURE_MAP are replaced by their mapped values if found in the input."""
         # We use a conditional check to find an available key from the pre-defined LIGATURE_MAP
         if LIGATURE_MAP:
-            testLigature = list(LIGATURE_MAP.keys())[0]
+            testLigature = next(iter(LIGATURE_MAP))
             expectedReplacement = LIGATURE_MAP[testLigature]
 
             inputText = f"ٹیکسٹ {testLigature} 123"
@@ -171,7 +175,7 @@ class TestNormalizeUrduChars:
         """Test that keys present in URDU_VARIANT_REVERSAL_MAP are mapped back to their base forms."""
         # We use a conditional check to find an available key from the pre-defined URDU_VARIANT_REVERSAL_MAP
         if URDU_VARIANT_REVERSAL_MAP:
-            testVariant = list(URDU_VARIANT_REVERSAL_MAP.keys())[0]
+            testVariant = next(iter(URDU_VARIANT_REVERSAL_MAP))
             expectedBase = URDU_VARIANT_REVERSAL_MAP[testVariant]
 
             inputText = f"ٹیکسٹ {testVariant} abc"
@@ -187,12 +191,12 @@ class TestNormalizeUrduChars:
 
         # Dynamically inject one item from each dictionary into the text to run a combined simulation
         if LIGATURE_MAP:
-            ligatureKey = list(LIGATURE_MAP.keys())[0]
+            ligatureKey = next(iter(LIGATURE_MAP))
             inputText += f" {ligatureKey}"
             expectedOutput += f" {LIGATURE_MAP[ligatureKey]}"
 
         if URDU_VARIANT_REVERSAL_MAP:
-            variantKey = list(URDU_VARIANT_REVERSAL_MAP.keys())[0]
+            variantKey = next(iter(URDU_VARIANT_REVERSAL_MAP))
             inputText += f" {variantKey}"
             expectedOutput += f" {URDU_VARIANT_REVERSAL_MAP[variantKey]}"
 

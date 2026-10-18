@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ******************************************************************************
 # Copyright (c) 2026 RoXimn <roximn148@gmail.com>
 # This source code is licensed under the MIT license found in the
@@ -6,8 +5,6 @@
 # ******************************************************************************
 import sys
 from pathlib import Path
-
-import sphinx_rtd_theme
 
 # Source code Path -------------------------------------------------------------
 sys.path.insert(0, str(Path('..', 'src').resolve()))
@@ -18,7 +15,7 @@ sys.path.insert(0, str(Path('..', 'src').resolve()))
 project = 'Roman Alfaz'
 copyright = '2026, RoXimn. Licensed under the MIT license'
 author = 'RoXimn'
-release = '0.1.0a1'
+release = '0.1.0a4'
 
 # General configuration --------------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

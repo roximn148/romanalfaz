@@ -1,4 +1,3 @@
-#-*- coding: utf-8 -*-
 # ******************************************************************************
 # Copyright (c) 2026 RoXimn <roximn148@gmail.com>
 # This source code is licensed under the MIT license found in the
@@ -9,10 +8,10 @@ This module contains the Urdu language roman-to-arabic script transliteration
 algorithm and its helper functions.
 """
 # ******************************************************************************
-import re
 import itertools
-from .utils import normalize, normalizeWhiteSpace
+import re
 
+from .utils import normalize, normalizeWhiteSpace
 
 # ******************************************************************************
 # URDU ARABIC2ROMAN ENCODING MAP START
@@ -342,7 +341,7 @@ def permuteFirstOccurrence(token: str, mapping: dict[str, list[str]]) -> list[st
     leftMostKey: str = ""
 
     # Scan the token to find the earliest (leftmost) mapping key
-    for substr in mapping.keys():
+    for substr in mapping:
         index = token.find(substr)
 
         # If the substring is found and occurs earlier than the current minimum

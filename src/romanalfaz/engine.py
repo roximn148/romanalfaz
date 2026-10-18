@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ******************************************************************************
 #    Copyright (c) 2026 RoXimn <roximn148@gmail.com>
 #    This source code is licensed under the MIT license found in the
@@ -10,15 +9,17 @@ package.
 """
 # ******************************************************************************
 from collections import Counter, defaultdict
+from collections.abc import Callable
 from itertools import chain
 from pathlib import Path
-from typing import NamedTuple, Callable
+from typing import NamedTuple
 
 from symspellpy import SymSpell, Verbosity
 from symspellpy.suggest_item import SuggestItem
 
-from .algorithm import tafseerUrduRm2Rm, tafseerUrduAr2Rm
+from .algorithm import tafseerUrduAr2Rm, tafseerUrduRm2Rm
 from .exceptions import DictionaryNotFoundError
+
 
 # ******************************************************************************
 def getDefaultWordsFilename() -> str:
@@ -194,12 +195,16 @@ class Vocabulary:
 
 # ******************************************************************************
 class Suggestion(NamedTuple):
-    """Urdu transliteration suggestion pairing Arabic script to encoded Roman."""
-    arabic: str
+    """Urdu transliteration suggestion pairing Arabic script to encoded Roman.
+
+    All fields carry defaults, so ``Suggestion()`` constructs the blank
+    (undefined) suggestion with no word and zero frequency.
+    """
+    arabic: str = ""
     """(str): The original word in Arabic script."""
-    encodedRoman: str
+    encodedRoman: str = ""
     """(str): The intermediate encoded Roman representation."""
-    frequency: int
+    frequency: int = 0
     """(int): The usage count of this specific word."""
 
     def __str__(self) -> str:
@@ -209,6 +214,30 @@ class Suggestion(NamedTuple):
         return (f"Suggestion(arabic={self.arabic!r}, "
                 f"encodedRoman={self.encodedRoman!r}, "
                 f"frequency={self.frequency!r})")
+
+    # **************************************************************************
+    def isUndefined(self) -> bool:
+        """Checks whether this suggestion is undefined.
+
+        A suggestion is defined only when it holds an arabic-script word
+        AND reports a positive frequency. It is undefined when either
+        the arabic word is empty or the frequency is zero.
+
+        Returns:
+            bool: ``True`` if ``arabic == ""`` or ``frequency == 0``,
+            ``False`` otherwise.
+
+        Example:
+            >>> Suggestion().isUndefined()
+            True
+            >>> Suggestion(arabic="کتاب").isUndefined()
+            True
+            >>> Suggestion(frequency=4643).isUndefined()
+            True
+            >>> Suggestion(arabic="کتاب", frequency=4643).isUndefined()
+            False
+        """
+        return self.arabic == "" or self.frequency == 0
 
 
 # ******************************************************************************
@@ -271,7 +300,7 @@ class RomanAlfaz:
             # attempt to resolve and initialize using the default wordlist source.
             try:
                 vocab = Vocabulary.load(getDefaultWordsFilename())
-            except Exception as e:
+            except (OSError, ValueError) as e:
                 raise DictionaryNotFoundError(e)
             else:
                 self.addVocabulary(vocab)
