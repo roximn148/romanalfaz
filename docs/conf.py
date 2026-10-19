@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path('..', 'src').resolve()))
 project = 'Roman Alfaz'
 copyright = '2026, RoXimn. Licensed under the MIT license'
 author = 'RoXimn'
-release = '0.1.0a4'
+release = '0.1.0a5'
 
 # General configuration --------------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
