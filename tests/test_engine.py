@@ -287,5 +287,63 @@ class TestRomanAlfaz:
         assert ("کرون", 15) in reverseSet
         assert ("کروں", 20) in reverseSet
 
+    def testHasWordReturnsTrueForStoredWord(self):
+        """Verify that hasWord reports True for a word stored in the dictionary."""
+        ra = RomanAlfaz([Vocabulary({"کتاب": 10})])
+
+        assert ra.hasWord("کتاب") is True
+
+    def testHasWordReturnsFalseForAbsentWord(self):
+        """Verify that hasWord reports False for a word that is not in the dictionary."""
+        ra = RomanAlfaz([Vocabulary({"کتاب": 10})])
+
+        assert ra.hasWord("قلم") is False
+
+    def testHasWordMatchesPositionalVariantSpelling(self):
+        """Verify that a stored word is still found when queried in positional variant forms."""
+        # Stored in base KAF form; normalization folds it to the Urdu KEHEH base form.
+        ra = RomanAlfaz([Vocabulary({"كتاب": 10})])
+
+        # Base-form KEHEH query matches the normalized stored key
+        assert ra.hasWord("کتاب") is True
+        # KAF + final-form BEH (U+FE90) surface spelling still matches
+        assert ra.hasWord("كتاﺐ") is True
+
+    def testHasWordToleratesDiacriticsAndTatweel(self):
+        """Verify that input differing from the stored word only in diacritics or tatweel is still present."""
+        ra = RomanAlfaz([Vocabulary({"محمد": 10})])
+
+        # Arabic vocalization marks are stripped during normalization
+        assert ra.hasWord("مُحَمَّدٌ") is True
+        # Tatweel (U+0640) is stripped during normalization
+        assert ra.hasWord("مـحمد") is True
+
+    def testHasWordReturnsFalseForEmptyInput(self):
+        """Verify that an empty input string reports False without erroring."""
+        ra = RomanAlfaz([Vocabulary({"کتاب": 10})])
+
+        assert ra.hasWord("") is False
+
+    def testHasWordFindsWordFromAnyAttachedVocabulary(self):
+        """Verify that a word stored in any attached vocabulary is reported present."""
+        v1 = Vocabulary({"کتاب": 10})
+        v2 = Vocabulary({"دنیا": 5})
+
+        ra = RomanAlfaz([v1, v2])
+
+        assert ra.hasWord("کتاب") is True
+        assert ra.hasWord("دنیا") is True
+
+    def testHasWordFlipsFalseAfterRemoveVocabulary(self):
+        """Verify that removing the vocabulary holding a word makes hasWord report False."""
+        v1 = Vocabulary({"کتاب": 10})
+        ra = RomanAlfaz([v1])
+
+        assert ra.hasWord("کتاب") is True
+
+        ra.removeVocabulary(v1)
+
+        assert ra.hasWord("کتاب") is False
+
 
 # ******************************************************************************

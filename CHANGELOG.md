@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+### Added
+- RomanAlfaz.hasWord() method to check the presence of arabic-script
+  words in the dictionary (normalized exact match, no fuzzy matching)
+
 ## [0.1.0a4] - 2026-10-18
 
 ## Planned
