@@ -19,6 +19,7 @@ from symspellpy.suggest_item import SuggestItem
 
 from .algorithm import tafseerUrduAr2Rm, tafseerUrduRm2Rm
 from .exceptions import DictionaryNotFoundError
+from .utils import normalize
 
 
 # ******************************************************************************
@@ -286,6 +287,11 @@ class RomanAlfaz:
         # a single Roman word key without overwriting each other.
         self.reverseMapping: defaultdict = defaultdict(set)
 
+        # Holds the normalized arabic-script forms of every dictionary word for
+        # O(1) existence checks in hasWord. Rebuilt from the aggregate vocabulary
+        # on every recompileLookup, so it stays in sync with all attached vocabularies.
+        self.arabicWords: set[str] = set()
+
         # Holds references to all monitored Vocabulary instances active in the system.
         self.vocabularies: list[Vocabulary] = []
 
@@ -378,6 +384,11 @@ class RomanAlfaz:
         aggregateCounter: Counter[str] = Counter()
         for vocab in self.vocabularies:
             aggregateCounter.update(vocab.counter)
+
+        # STAGE 2b: Index arabic-script words for direct existence checks --------
+        # Project the aggregate vocabulary into normalized arabic-script keys so
+        # hasWord can answer word-presence queries in O(1) without fuzzy matching.
+        self.arabicWords = {normalize(w) for w in aggregateCounter}
 
         # STAGE 3: Romanization & Homonym Mapping ------------------------------
         # Different Arabic words can resolve to the exact same Romanized string.
@@ -588,6 +599,49 @@ class RomanAlfaz:
         """
         suggestions = self.getExactMatches(romanWord, maxPredictions=None)
         return suggestions[0] if suggestions else None
+
+    # **************************************************************************
+    def hasWord(self, arabicWord: str) -> bool:
+        """
+        Checks the presence of an arabic-script Urdu word in the dictionary.
+
+        A word counts as present when it is stored in any attached Vocabulary.
+        Both the stored word and the input are compared after
+        :py:func:`romanalfaz.utils.normalize`, so input that differs from the
+        stored spelling only in surface form (positional letter forms, tatweel,
+        removable diacritics) still reports present.
+
+        This is a plain membership check, not a fuzzy search: the input must be
+        a single word, and no edit-distance suggestions are generated.
+
+        Args:
+            arabicWord (str): The arabic-script word to look up.
+
+        Returns:
+            bool: ``True`` if the normalized word is present in the aggregated
+            dictionary, ``False`` otherwise (including empty input).
+
+        Raises:
+            AssertionError: If `arabicWord` is not a string.
+
+        Example:
+            >>> from romanalfaz import RomanAlfaz
+            >>> from romanalfaz.engine import Vocabulary
+            >>> ra = RomanAlfaz(vocabularies=[Vocabulary({"کتاب": 10})])
+            >>> ra.hasWord("کتاب")
+            True
+            >>> ra.hasWord("قلم")
+            False
+        """
+        assert isinstance(arabicWord, str)
+
+        # Empty input can never be a dictionary word
+        if not arabicWord:
+            return False
+
+        # Compare normalized forms: folds positional variants, tatweel, and
+        # removable diacritics so surface-spelling differences still match.
+        return normalize(arabicWord) in self.arabicWords
 
 
 # ******************************************************************************
