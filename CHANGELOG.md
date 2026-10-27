@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+### Fixed
+- URDU_VARIANT_MAP now lists the correct own presentation forms for HEH
+  DOACHASHMEE (U+06BE) and FARSI YEH (U+06CC), and uses the real ALEF MAKSURA
+  presentation forms (U+FEEF/U+FEF0) instead of unassigned code points
+- Every presentation form is now listed exactly once, so
+  URDU_VARIANT_REVERSAL_MAP has no code point owned by two base characters
+
+### Changed
+- Code points are ordered ascending within the YEH WITH HAMZA ABOVE (U+0626)
+  and YEH BARREE (U+06D2) entries
+- utils.py inline comments now use the official Unicode character names
+- utils.py docstrings fixed to match actual behavior (removed the dead
+  `normalizeNonChars` reference, corrected the LIGATURE_MAP key/value
+  description)
+
+### Added
+- Test coverage for the URDU_VARIANT_MAP, URDU_VARIANT_REVERSAL_MAP, and
+  LIGATURE_MAP data structures and for the normalization of the repaired
+  code points
+
 ## [0.1.0a5] - 2026-10-19
 
 ### Added
