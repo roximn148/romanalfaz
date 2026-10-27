@@ -13,6 +13,7 @@ Note:
 ..  _unicodedataplus: https://pypi.org/project/unicodedataplus/
 
 """
+
 # ******************************************************************************
 import unicodedataplus as ud
 
@@ -20,357 +21,357 @@ import unicodedataplus as ud
 # URDU VARIANT MAP START
 URDU_VARIANT_MAP: dict[str, list[str]] = {
     # ALIF (ا)
-    '\u0627': [
-        '\u0627',  # ARABIC LETTER ALIF
-        '\uFE8D',  # ARABIC LETTER ALIF ISOLATED FORM
-        '\uFE8E',  # ARABIC LETTER ALIF FINAL FORM
+    "\u0627": [
+        "\u0627",  # ARABIC LETTER ALEF
+        "\ufe8d",  # ARABIC LETTER ALEF ISOLATED FORM
+        "\ufe8e",  # ARABIC LETTER ALEF FINAL FORM
     ],
-    # ALEF MADDA (آ)
-    '\u0622': [
-        '\u0622',  # ARABIC LETTER ALEF WITH MADDA ABOVE
-        '\uFE81',  # ALEF WITH MADDA ABOVE ISOLATED FORM
-        '\uFE82',  # ALEF WITH MADDA ABOVE FINAL FORM
+    # ALIF MADDA (آ)
+    "\u0622": [
+        "\u0622",  # ARABIC LETTER ALEF WITH MADDA ABOVE
+        "\ufe81",  # ARABIC LETTER ALEF WITH MADDA ABOVE ISOLATED FORM
+        "\ufe82",  # ARABIC LETTER ALEF WITH MADDA ABOVE FINAL FORM
     ],
     # BE (ب)
-    '\u0628': [
-        '\u0628',  # ARABIC LETTER BE
-        '\uFE8F',  # ARABIC LETTER BE ISOLATED FORM
-        '\uFE90',  # ARABIC LETTER BE FINAL FORM
-        '\uFE91',  # ARABIC LETTER BE INITIAL FORM
-        '\uFE92',  # ARABIC LETTER BE MEDIAL FORM
+    "\u0628": [
+        "\u0628",  # ARABIC LETTER BEH
+        "\ufe8f",  # ARABIC LETTER BEH ISOLATED FORM
+        "\ufe90",  # ARABIC LETTER BEH FINAL FORM
+        "\ufe91",  # ARABIC LETTER BEH INITIAL FORM
+        "\ufe92",  # ARABIC LETTER BEH MEDIAL FORM
     ],
     # PE (پ)
-    '\u067E': [
-        '\u067E',  # ARABIC LETTER PE
-        '\uFB56',  # ARABIC LETTER PE ISOLATED FORM
-        '\uFB57',  # ARABIC LETTER PE FINAL FORM
-        '\uFB58',  # ARABIC LETTER PE INITIAL FORM
-        '\uFB59',  # ARABIC LETTER PE MEDIAL FORM
+    "\u067e": [
+        "\u067e",  # ARABIC LETTER PEH
+        "\ufb56",  # ARABIC LETTER PEH ISOLATED FORM
+        "\ufb57",  # ARABIC LETTER PEH FINAL FORM
+        "\ufb58",  # ARABIC LETTER PEH INITIAL FORM
+        "\ufb59",  # ARABIC LETTER PEH MEDIAL FORM
     ],
     # TE (ت)
-    '\u062A': [
-        '\u062A',  # ARABIC LETTER TE
-        '\uFE95',  # ARABIC LETTER TE ISOLATED FORM
-        '\uFE96',  # ARABIC LETTER TE FINAL FORM
-        '\uFE97',  # ARABIC LETTER TE INITIAL FORM
-        '\uFE98',  # ARABIC LETTER TE MEDIAL FORM
+    "\u062a": [
+        "\u062a",  # ARABIC LETTER TEH
+        "\ufe95",  # ARABIC LETTER TEH ISOLATED FORM
+        "\ufe96",  # ARABIC LETTER TEH FINAL FORM
+        "\ufe97",  # ARABIC LETTER TEH INITIAL FORM
+        "\ufe98",  # ARABIC LETTER TEH MEDIAL FORM
     ],
     # TTE (ٹ)
-    '\u0679': [
-        '\u0679',  # ARABIC LETTER TTE
-        '\uFB66',  # ARABIC LETTER TTE ISOLATED FORM
-        '\uFB67',  # ARABIC LETTER TTE FINAL FORM
-        '\uFB68',  # ARABIC LETTER TTE INITIAL FORM
-        '\uFB69',  # ARABIC LETTER TTE MEDIAL FORM
+    "\u0679": [
+        "\u0679",  # ARABIC LETTER TTEH
+        "\ufb66",  # ARABIC LETTER TTEH ISOLATED FORM
+        "\ufb67",  # ARABIC LETTER TTEH FINAL FORM
+        "\ufb68",  # ARABIC LETTER TTEH INITIAL FORM
+        "\ufb69",  # ARABIC LETTER TTEH MEDIAL FORM
     ],
     # SE (ث)
-    '\u062B': [
-        '\u062B',  # ARABIC LETTER THE
-        '\uFE99',  # ARABIC LETTER THE ISOLATED FORM
-        '\uFE9A',  # ARABIC LETTER THE FINAL FORM
-        '\uFE9B',  # ARABIC LETTER THE INITIAL FORM
-        '\uFE9C',  # ARABIC LETTER THE MEDIAL FORM
+    "\u062b": [
+        "\u062b",  # ARABIC LETTER THEH
+        "\ufe99",  # ARABIC LETTER THEH ISOLATED FORM
+        "\ufe9a",  # ARABIC LETTER THEH FINAL FORM
+        "\ufe9b",  # ARABIC LETTER THEH INITIAL FORM
+        "\ufe9c",  # ARABIC LETTER THEH MEDIAL FORM
     ],
     # JEEM (ج)
-    '\u062C': [
-        '\u062C',  # ARABIC LETTER JEEM
-        '\uFE9D',  # ARABIC LETTER JEEM ISOLATED FORM
-        '\uFE9E',  # ARABIC LETTER JEEM FINAL FORM
-        '\uFE9F',  # ARABIC LETTER JEEM INITIAL FORM
-        '\uFEA0',  # ARABIC LETTER JEEM MEDIAL FORM
+    "\u062c": [
+        "\u062c",  # ARABIC LETTER JEEM
+        "\ufe9d",  # ARABIC LETTER JEEM ISOLATED FORM
+        "\ufe9e",  # ARABIC LETTER JEEM FINAL FORM
+        "\ufe9f",  # ARABIC LETTER JEEM INITIAL FORM
+        "\ufea0",  # ARABIC LETTER JEEM MEDIAL FORM
     ],
     # CHE (چ)
-    '\u0686': [
-        '\u0686',  # ARABIC LETTER CHE
-        '\uFB7A',  # ARABIC LETTER CHE ISOLATED FORM
-        '\uFB7B',  # ARABIC LETTER CHE FINAL FORM
-        '\uFB7C',  # ARABIC LETTER CHE INITIAL FORM
-        '\uFB7D',  # ARABIC LETTER CHE MEDIAL FORM
+    "\u0686": [
+        "\u0686",  # ARABIC LETTER TCHEH
+        "\ufb7a",  # ARABIC LETTER TCHEH ISOLATED FORM
+        "\ufb7b",  # ARABIC LETTER TCHEH FINAL FORM
+        "\ufb7c",  # ARABIC LETTER TCHEH INITIAL FORM
+        "\ufb7d",  # ARABIC LETTER TCHEH MEDIAL FORM
     ],
-    # BARI HE (ح)
-    '\u062D': [
-        '\u062D',  # ARABIC LETTER HAA
-        '\uFEA1',  # ARABIC LETTER HAA ISOLATED FORM
-        '\uFEA2',  # ARABIC LETTER HAA FINAL FORM
-        '\uFEA3',  # ARABIC LETTER HAA INITIAL FORM
-        '\uFEA4',  # ARABIC LETTER HAA MEDIAL FORM
+    # HE (ح)
+    "\u062d": [
+        "\u062d",  # ARABIC LETTER HAH
+        "\ufea1",  # ARABIC LETTER HAH ISOLATED FORM
+        "\ufea2",  # ARABIC LETTER HAH FINAL FORM
+        "\ufea3",  # ARABIC LETTER HAH INITIAL FORM
+        "\ufea4",  # ARABIC LETTER HAH MEDIAL FORM
     ],
     # KHE (خ)
-    '\u062E': [
-        '\u062E',  # ARABIC LETTER KHAA
-        '\uFEA5',  # ARABIC LETTER KHAA ISOLATED FORM
-        '\uFEA6',  # ARABIC LETTER KHAA FINAL FORM
-        '\uFEA7',  # ARABIC LETTER KHAA INITIAL FORM
-        '\uFEA8',  # ARABIC LETTER KHAA MEDIAL FORM
+    "\u062e": [
+        "\u062e",  # ARABIC LETTER KHAH
+        "\ufea5",  # ARABIC LETTER KHAH ISOLATED FORM
+        "\ufea6",  # ARABIC LETTER KHAH FINAL FORM
+        "\ufea7",  # ARABIC LETTER KHAH INITIAL FORM
+        "\ufea8",  # ARABIC LETTER KHAH MEDIAL FORM
     ],
     # DAL (د)
-    '\u062F': [
-        '\u062F',  # ARABIC LETTER DAL
-        '\uFEA9',  # ARABIC LETTER DAL ISOLATED FORM
-        '\uFEAA',  # ARABIC LETTER DAL FINAL FORM
+    "\u062f": [
+        "\u062f",  # ARABIC LETTER DAL
+        "\ufea9",  # ARABIC LETTER DAL ISOLATED FORM
+        "\ufeaa",  # ARABIC LETTER DAL FINAL FORM
     ],
     # DDAL (ڈ)
-    '\u0688': [
-        '\u0688',  # ARABIC LETTER DDAL
-        '\uFB88',  # ARABIC LETTER DDAL ISOLATED FORM
-        '\uFB89',  # ARABIC LETTER DDAL FINAL FORM
+    "\u0688": [
+        "\u0688",  # ARABIC LETTER DDAL
+        "\ufb88",  # ARABIC LETTER DDAL ISOLATED FORM
+        "\ufb89",  # ARABIC LETTER DDAL FINAL FORM
     ],
     # ZAL (ذ)
-    '\u0630': [
-        '\u0630',  # ARABIC LETTER THAL
-        '\uFEAB',  # ARABIC LETTER THAL ISOLATED FORM
-        '\uFEAC',  # ARABIC LETTER THAL FINAL FORM
+    "\u0630": [
+        "\u0630",  # ARABIC LETTER THAL
+        "\ufeab",  # ARABIC LETTER THAL ISOLATED FORM
+        "\ufeac",  # ARABIC LETTER THAL FINAL FORM
     ],
     # RE (ر)
-    '\u0631': [
-        '\u0631',  # ARABIC LETTER REH
-        '\uFEAD',  # ARABIC LETTER REH ISOLATED FORM
-        '\uFEAE',  # ARABIC LETTER REH FINAL FORM
+    "\u0631": [
+        "\u0631",  # ARABIC LETTER REH
+        "\ufead",  # ARABIC LETTER REH ISOLATED FORM
+        "\ufeae",  # ARABIC LETTER REH FINAL FORM
     ],
     # RRE (ڑ)
-    '\u0691': [
-        '\u0691',  # ARABIC LETTER RREH
-        '\uFB8C',  # ARABIC LETTER RREH ISOLATED FORM
-        '\uFB8D',  # ARABIC LETTER RREH FINAL FORM
+    "\u0691": [
+        "\u0691",  # ARABIC LETTER RREH
+        "\ufb8c",  # ARABIC LETTER RREH ISOLATED FORM
+        "\ufb8d",  # ARABIC LETTER RREH FINAL FORM
     ],
     # ZE (ز)
-    '\u0632': [
-        '\u0632',  # ARABIC LETTER ZAIN
-        '\uFEAF',  # ARABIC LETTER ZAIN ISOLATED FORM
-        '\uFEB0',  # ARABIC LETTER ZAIN FINAL FORM
+    "\u0632": [
+        "\u0632",  # ARABIC LETTER ZAIN
+        "\ufeaf",  # ARABIC LETTER ZAIN ISOLATED FORM
+        "\ufeb0",  # ARABIC LETTER ZAIN FINAL FORM
     ],
     # ZHE (ژ)
-    '\u0698': [
-        '\u0698',  # ARABIC LETTER JEH
-        '\uFB8A',  # ARABIC LETTER JEH ISOLATED FORM
-        '\uFB8B',  # ARABIC LETTER JEH FINAL FORM
+    "\u0698": [
+        "\u0698",  # ARABIC LETTER JEH
+        "\ufb8a",  # ARABIC LETTER JEH ISOLATED FORM
+        "\ufb8b",  # ARABIC LETTER JEH FINAL FORM
     ],
     # SEEN (س)
-    '\u0633': [
-        '\u0633',  # ARABIC LETTER SEEN
-        '\uFEB1',  # ARABIC LETTER SEEN ISOLATED FORM
-        '\uFEB2',  # ARABIC LETTER SEEN FINAL FORM
-        '\uFEB3',  # ARABIC LETTER SEEN INITIAL FORM
-        '\uFEB4',  # ARABIC LETTER SEEN MEDIAL FORM
+    "\u0633": [
+        "\u0633",  # ARABIC LETTER SEEN
+        "\ufeb1",  # ARABIC LETTER SEEN ISOLATED FORM
+        "\ufeb2",  # ARABIC LETTER SEEN FINAL FORM
+        "\ufeb3",  # ARABIC LETTER SEEN INITIAL FORM
+        "\ufeb4",  # ARABIC LETTER SEEN MEDIAL FORM
     ],
     # SHEEN (ش)
-    '\u0634': [
-        '\u0634',  # ARABIC LETTER SHEEN
-        '\uFEB5',  # ARABIC LETTER SHEEN ISOLATED FORM
-        '\uFEB6',  # ARABIC LETTER SHEEN FINAL FORM
-        '\uFEB7',  # ARABIC LETTER SHEEN INITIAL FORM
-        '\uFEB8',  # ARABIC LETTER SHEEN MEDIAL FORM
+    "\u0634": [
+        "\u0634",  # ARABIC LETTER SHEEN
+        "\ufeb5",  # ARABIC LETTER SHEEN ISOLATED FORM
+        "\ufeb6",  # ARABIC LETTER SHEEN FINAL FORM
+        "\ufeb7",  # ARABIC LETTER SHEEN INITIAL FORM
+        "\ufeb8",  # ARABIC LETTER SHEEN MEDIAL FORM
     ],
     # SUAD (ص)
-    '\u0635': [
-        '\u0635',  # ARABIC LETTER SAD
-        '\uFEB9',  # ARABIC LETTER SAD ISOLATED FORM
-        '\uFEBA',  # ARABIC LETTER SAD FINAL FORM
-        '\uFEBB',  # ARABIC LETTER SAD INITIAL FORM
-        '\uFEBC',  # ARABIC LETTER SAD MEDIAL FORM
+    "\u0635": [
+        "\u0635",  # ARABIC LETTER SAD
+        "\ufeb9",  # ARABIC LETTER SAD ISOLATED FORM
+        "\ufeba",  # ARABIC LETTER SAD FINAL FORM
+        "\ufebb",  # ARABIC LETTER SAD INITIAL FORM
+        "\ufebc",  # ARABIC LETTER SAD MEDIAL FORM
     ],
     # ZUAD (ض)
-    '\u0636': [
-        '\u0636',  # ARABIC LETTER DAD
-        '\uFEBD',  # ARABIC LETTER DAD ISOLATED FORM
-        '\uFEBE',  # ARABIC LETTER DAD FINAL FORM
-        '\uFEBF',  # ARABIC LETTER DAD INITIAL FORM
-        '\uFEC0',  # ARABIC LETTER DAD MEDIAL FORM
+    "\u0636": [
+        "\u0636",  # ARABIC LETTER DAD
+        "\ufebd",  # ARABIC LETTER DAD ISOLATED FORM
+        "\ufebe",  # ARABIC LETTER DAD FINAL FORM
+        "\ufebf",  # ARABIC LETTER DAD INITIAL FORM
+        "\ufec0",  # ARABIC LETTER DAD MEDIAL FORM
     ],
     # TO'E (ط)
-    '\u0637': [
-        '\u0637',  # ARABIC LETTER TAH
-        '\uFEC1',  # ARABIC LETTER TAH ISOLATED FORM
-        '\uFEC2',  # ARABIC LETTER TAH FINAL FORM
-        '\uFEC3',  # ARABIC LETTER TAH INITIAL FORM
-        '\uFEC4',  # ARABIC LETTER TAH MEDIAL FORM
+    "\u0637": [
+        "\u0637",  # ARABIC LETTER TAH
+        "\ufec1",  # ARABIC LETTER TAH ISOLATED FORM
+        "\ufec2",  # ARABIC LETTER TAH FINAL FORM
+        "\ufec3",  # ARABIC LETTER TAH INITIAL FORM
+        "\ufec4",  # ARABIC LETTER TAH MEDIAL FORM
     ],
     # ZO'E (ظ)
-    '\u0638': [
-        '\u0638',  # ARABIC LETTER ZAH
-        '\uFEC5',  # ARABIC LETTER ZAH ISOLATED FORM
-        '\uFEC6',  # ARABIC LETTER ZAH FINAL FORM
-        '\uFEC7',  # ARABIC LETTER ZAH INITIAL FORM
-        '\uFEC8',  # ARABIC LETTER ZAH MEDIAL FORM
+    "\u0638": [
+        "\u0638",  # ARABIC LETTER ZAH
+        "\ufec5",  # ARABIC LETTER ZAH ISOLATED FORM
+        "\ufec6",  # ARABIC LETTER ZAH FINAL FORM
+        "\ufec7",  # ARABIC LETTER ZAH INITIAL FORM
+        "\ufec8",  # ARABIC LETTER ZAH MEDIAL FORM
     ],
     # AIN (ع)
-    '\u0639': [
-        '\u0639',  # ARABIC LETTER AIN
-        '\uFEC9',  # ARABIC LETTER AIN ISOLATED FORM
-        '\uFECA',  # ARABIC LETTER AIN FINAL FORM
-        '\uFECB',  # ARABIC LETTER AIN INITIAL FORM
-        '\uFECC',  # ARABIC LETTER AIN MEDIAL FORM
+    "\u0639": [
+        "\u0639",  # ARABIC LETTER AIN
+        "\ufec9",  # ARABIC LETTER AIN ISOLATED FORM
+        "\ufeca",  # ARABIC LETTER AIN FINAL FORM
+        "\ufecb",  # ARABIC LETTER AIN INITIAL FORM
+        "\ufecc",  # ARABIC LETTER AIN MEDIAL FORM
     ],
     # GHAIN (غ)
-    '\u063A': [
-        '\u063A',  # ARABIC LETTER GHAIN
-        '\uFECD',  # ARABIC LETTER GHAIN ISOLATED FORM
-        '\uFECE',  # ARABIC LETTER GHAIN FINAL FORM
-        '\uFECF',  # ARABIC LETTER GHAIN INITIAL FORM
-        '\uFED0',  # ARABIC LETTER GHAIN MEDIAL FORM
+    "\u063a": [
+        "\u063a",  # ARABIC LETTER GHAIN
+        "\ufecd",  # ARABIC LETTER GHAIN ISOLATED FORM
+        "\ufece",  # ARABIC LETTER GHAIN FINAL FORM
+        "\ufecf",  # ARABIC LETTER GHAIN INITIAL FORM
+        "\ufed0",  # ARABIC LETTER GHAIN MEDIAL FORM
     ],
     # FE (ف)
-    '\u0641': [
-        '\u0641',  # ARABIC LETTER FE
-        '\uFED1',  # ARABIC LETTER FE ISOLATED FORM
-        '\uFED2',  # ARABIC LETTER FE FINAL FORM
-        '\uFED3',  # ARABIC LETTER FE INITIAL FORM
-        '\uFED4',  # ARABIC LETTER FE MEDIAL FORM
+    "\u0641": [
+        "\u0641",  # ARABIC LETTER FEH
+        "\ufed1",  # ARABIC LETTER FEH ISOLATED FORM
+        "\ufed2",  # ARABIC LETTER FEH FINAL FORM
+        "\ufed3",  # ARABIC LETTER FEH INITIAL FORM
+        "\ufed4",  # ARABIC LETTER FEH MEDIAL FORM
     ],
     # QAF (ق)
-    '\u0642': [
-        '\u0642',  # ARABIC LETTER QAF
-        '\uFED5',  # ARABIC LETTER QAF ISOLATED FORM
-        '\uFED6',  # ARABIC LETTER QAF FINAL FORM
-        '\uFED7',  # ARABIC LETTER QAF INITIAL FORM
-        '\uFED8',  # ARABIC LETTER QAF MEDIAL FORM
+    "\u0642": [
+        "\u0642",  # ARABIC LETTER QAF
+        "\ufed5",  # ARABIC LETTER QAF ISOLATED FORM
+        "\ufed6",  # ARABIC LETTER QAF FINAL FORM
+        "\ufed7",  # ARABIC LETTER QAF INITIAL FORM
+        "\ufed8",  # ARABIC LETTER QAF MEDIAL FORM
     ],
     # URDU KAF (ک)
-    '\u06A9': [
+    "\u06a9": [
         # Urdu/Persian Keheh (ک)
-        '\u06A9',  # ARABIC LETTER KEHEH
-        '\uFB8E',  # ARABIC LETTER KEHEH ISOLATED FORM
-        '\uFB8F',  # ARABIC LETTER KEHEH FINAL FORM
-        '\uFB90',  # ARABIC LETTER KEHEH INITIAL FORM
-        '\uFB91',  # ARABIC LETTER KEHEH MEDIAL FORM
+        "\u06a9",  # ARABIC LETTER KEHEH
+        "\ufb8e",  # ARABIC LETTER KEHEH ISOLATED FORM
+        "\ufb8f",  # ARABIC LETTER KEHEH FINAL FORM
+        "\ufb90",  # ARABIC LETTER KEHEH INITIAL FORM
+        "\ufb91",  # ARABIC LETTER KEHEH MEDIAL FORM
         # Arabic Kaf (ك)
-        '\u0643',  # ARABIC LETTER KAF
-        '\uFED9',  # ARABIC LETTER KAF ISOLATED FORM
-        '\uFEDA',  # ARABIC LETTER KAF FINAL FORM
-        '\uFEDB',  # ARABIC LETTER KAF INITIAL FORM
-        '\uFEDC',  # ARABIC LETTER KAF MEDIAL FORM
+        "\u0643",  # ARABIC LETTER KAF
+        "\ufed9",  # ARABIC LETTER KAF ISOLATED FORM
+        "\ufeda",  # ARABIC LETTER KAF FINAL FORM
+        "\ufedb",  # ARABIC LETTER KAF INITIAL FORM
+        "\ufedc",  # ARABIC LETTER KAF MEDIAL FORM
         # Old Persian / Swash Kaf (ݢ)
-        '\u06A8',  # ARABIC LETTER KAF WITH TWO DOTS ABOVE
-        '\uFB96',  # ARABIC LETTER KAF WITH TWO DOTS ABOVE ISOLATED FORM
-        '\uFB97',  # ARABIC LETTER KAF WITH TWO DOTS ABOVE FINAL FORM
-        '\uFB98',  # ARABIC LETTER KAF WITH TWO DOTS ABOVE INITIAL FORM
-        '\uFB99',  # ARABIC LETTER KAF WITH TWO DOTS ABOVE MEDIAL FORM
+        "\u06a8",  # ARABIC LETTER QAF WITH THREE DOTS ABOVE
+        "\ufb96",  # ARABIC LETTER GUEH ISOLATED FORM
+        "\ufb97",  # ARABIC LETTER GUEH FINAL FORM
+        "\ufb98",  # ARABIC LETTER GUEH INITIAL FORM
+        "\ufb99",  # ARABIC LETTER GUEH MEDIAL FORM
     ],
     # GAF (گ)
-    '\u06AF': [
-        '\u06AF',  # ARABIC LETTER GAF
-        '\uFB92',  # ARABIC LETTER GAF ISOLATED FORM
-        '\uFB93',  # ARABIC LETTER GAF FINAL FORM
-        '\uFB94',  # ARABIC LETTER GAF INITIAL FORM
-        '\uFB95',  # ARABIC LETTER GAF MEDIAL FORM
+    "\u06af": [
+        "\u06af",  # ARABIC LETTER GAF
+        "\ufb92",  # ARABIC LETTER GAF ISOLATED FORM
+        "\ufb93",  # ARABIC LETTER GAF FINAL FORM
+        "\ufb94",  # ARABIC LETTER GAF INITIAL FORM
+        "\ufb95",  # ARABIC LETTER GAF MEDIAL FORM
     ],
     # LAM (ل)
-    '\u0644': [
-        '\u0644',  # ARABIC LETTER LAM
-        '\uFEDD',  # ARABIC LETTER LAM ISOLATED FORM
-        '\uFEDE',  # ARABIC LETTER LAM FINAL FORM
-        '\uFEDF',  # ARABIC LETTER LAM INITIAL FORM
-        '\uFEE0',  # ARABIC LETTER LAM MEDIAL FORM
+    "\u0644": [
+        "\u0644",  # ARABIC LETTER LAM
+        "\ufedd",  # ARABIC LETTER LAM ISOLATED FORM
+        "\ufede",  # ARABIC LETTER LAM FINAL FORM
+        "\ufedf",  # ARABIC LETTER LAM INITIAL FORM
+        "\ufee0",  # ARABIC LETTER LAM MEDIAL FORM
     ],
     # MEEM (م)
-    '\u0645': [
-        '\u0645',  # ARABIC LETTER MEEM
-        '\uFEE1',  # ARABIC LETTER MEEM ISOLATED FORM
-        '\uFEE2',  # ARABIC LETTER MEEM FINAL FORM
-        '\uFEE3',  # ARABIC LETTER MEEM INITIAL FORM
-        '\uFEE4',  # ARABIC LETTER MEEM MEDIAL FORM
+    "\u0645": [
+        "\u0645",  # ARABIC LETTER MEEM
+        "\ufee1",  # ARABIC LETTER MEEM ISOLATED FORM
+        "\ufee2",  # ARABIC LETTER MEEM FINAL FORM
+        "\ufee3",  # ARABIC LETTER MEEM INITIAL FORM
+        "\ufee4",  # ARABIC LETTER MEEM MEDIAL FORM
     ],
     # NOON (ن)
-    '\u0646': [
-        '\u0646',  # ARABIC LETTER NOON
-        '\uFEE5',  # ARABIC LETTER NOON ISOLATED FORM
-        '\uFEE6',  # ARABIC LETTER NOON FINAL FORM
-        '\uFEE7',  # ARABIC LETTER NOON INITIAL FORM
-        '\uFEE8',  # ARABIC LETTER NOON MEDIAL FORM
+    "\u0646": [
+        "\u0646",  # ARABIC LETTER NOON
+        "\ufee5",  # ARABIC LETTER NOON ISOLATED FORM
+        "\ufee6",  # ARABIC LETTER NOON FINAL FORM
+        "\ufee7",  # ARABIC LETTER NOON INITIAL FORM
+        "\ufee8",  # ARABIC LETTER NOON MEDIAL FORM
     ],
     # NOON GHUNNA (ں)
-    '\u06BA': [
-        '\u06BA',  # ARABIC LETTER NOON GHUNNA
-        '\uFB9E',  # ARABIC LETTER NOON GHUNNA ISOLATED FORM
-        '\uFB9F',  # ARABIC LETTER NOON GHUNNA FINAL FORM
+    "\u06ba": [
+        "\u06ba",  # ARABIC LETTER NOON GHUNNA
+        "\ufb9e",  # ARABIC LETTER NOON GHUNNA ISOLATED FORM
+        "\ufb9f",  # ARABIC LETTER NOON GHUNNA FINAL FORM
     ],
     # WAO (و)
-    '\u0648': [
+    "\u0648": [
         # Standard Wao
-        '\u0648',  # ARABIC LETTER WAW
-        '\uFEED',  # ARABIC LETTER WAW ISOLATED FORM
-        '\uFEEE',  # ARABIC LETTER WAW FINAL FORM
+        "\u0648",  # ARABIC LETTER WAW
+        "\ufeed",  # ARABIC LETTER WAW ISOLATED FORM
+        "\ufeee",  # ARABIC LETTER WAW FINAL FORM
         # Wao with Hamza (ؤ)
-        '\u0624',  # ARABIC LETTER WAW WITH HAMZA ABOVE
-        '\uFE85',  # ARABIC LETTER WAW WITH HAMZA ABOVE ISOLATED FORM
-        '\uFE86',  # ARABIC LETTER WAW WITH HAMZA ABOVE FINAL FORM
+        "\u0624",  # ARABIC LETTER WAW WITH HAMZA ABOVE
+        "\ufe85",  # ARABIC LETTER WAW WITH HAMZA ABOVE ISOLATED FORM
+        "\ufe86",  # ARABIC LETTER WAW WITH HAMZA ABOVE FINAL FORM
     ],
     # HE GOAL (ہ)
-    '\u06C1': [
+    "\u06c1": [
         # Urdu Heh Goal (ہ)
-        '\u06C1',  # ARABIC LETTER HEH GOAL
-        '\uFBA6',  # ARABIC LETTER HEH GOAL ISOLATED FORM
-        '\uFBA7',  # ARABIC LETTER HEH GOAL FINAL FORM
-        '\uFBA8',  # ARABIC LETTER HEH GOAL INITIAL FORM
-        '\uFBA9',  # ARABIC LETTER HEH GOAL MEDIAL FORM
+        "\u06c1",  # ARABIC LETTER HEH GOAL
+        "\ufba6",  # ARABIC LETTER HEH GOAL ISOLATED FORM
+        "\ufba7",  # ARABIC LETTER HEH GOAL FINAL FORM
+        "\ufba8",  # ARABIC LETTER HEH GOAL INITIAL FORM
+        "\ufba9",  # ARABIC LETTER HEH GOAL MEDIAL FORM
         # Arabic Ha (ه)
-        '\u0647',  # ARABIC LETTER HEH
-        '\uFEE9',  # ARABIC LETTER HEH ISOLATED FORM
-        '\uFEEA',  # ARABIC LETTER HEH FINAL FORM
-        '\uFEEB',  # ARABIC LETTER HEH INITIAL FORM
-        '\uFEEC',  # ARABIC LETTER HEH MEDIAL FORM
+        "\u0647",  # ARABIC LETTER HEH
+        "\ufee9",  # ARABIC LETTER HEH ISOLATED FORM
+        "\ufeea",  # ARABIC LETTER HEH FINAL FORM
+        "\ufeeb",  # ARABIC LETTER HEH INITIAL FORM
+        "\ufeec",  # ARABIC LETTER HEH MEDIAL FORM
         # Heh with Hamza variants (ۂ)
-        '\u06C2',  # ARABIC LETTER HEH GOAL WITH HAMZA ABOVE
-        '\u06C0',  # ARABIC LETTER HEH WITH YEH ABOVE
-        # Te Marbuta (ة)
-        '\u0629',  # ARABIC LETTER TE MARBUTA
-        '\uFE93',  # ARABIC LETTER TE MARBUTA ISOLATED FORM
-        '\uFE94',  # ARABIC LETTER TE MARBUTA FINAL FORM
+        "\u06c2",  # ARABIC LETTER HEH GOAL WITH HAMZA ABOVE
+        "\u06c0",  # ARABIC LETTER HEH WITH YEH ABOVE
+        "\ufba4",  # ARABIC LETTER HEH WITH YEH ABOVE ISOLATED FORM
+        "\ufba5",  # ARABIC LETTER HEH WITH YEH ABOVE FINAL FORM
     ],
     # TEH MARBUTA GOAL (ۃ)
-    '\u06C3': [
+    "\u06c3": [
         # Base Character
-        '\u06C3',  # ARABIC LETTER TEH MARBUTA GOAL (Urdu/Sindhi variant)
+        "\u06c3",  # ARABIC LETTER TEH MARBUTA GOAL (Urdu/Sindhi variant)
         # Standard Arabic Equivalents (For Cross-Dialect Search/Matching)
-        '\u0629',  # ARABIC LETTER TEH MARBUTA (ة)
-        '\uFE93',  # ARABIC LETTER TEH MARBUTA ISOLATED FORM (ﺓ)
-        '\uFE94',  # ARABIC LETTER TEH MARBUTA FINAL FORM (ﺔ)
+        "\u0629",  # ARABIC LETTER TEH MARBUTA (ة)
+        "\ufe93",  # ARABIC LETTER TEH MARBUTA ISOLATED FORM (ﺓ)
+        "\ufe94",  # ARABIC LETTER TEH MARBUTA FINAL FORM (ﺔ)
     ],
     # DO CHASHMI HE (ھ)
-    '\u06BE': [
-        '\u06BE',  # ARABIC LETTER HEH DOACHASHMEE
-        '\uFBAC',  # ARABIC LETTER HEH DOACHASHMEE ISOLATED FORM
-        '\uFBAD',  # ARABIC LETTER HEH DOACHASHMEE FINAL FORM
-        '\uFBAE',  # ARABIC LETTER HEH DOACHASHMEE INITIAL FORM
-        '\uFBAF',  # ARABIC LETTER HEH DOACHASHMEE MEDIAL FORM
+    "\u06be": [
+        "\u06be",  # ARABIC LETTER HEH DOACHASHMEE
+        "\ufbaa",  # ARABIC LETTER HEH DOACHASHMEE ISOLATED FORM
+        "\ufbab",  # ARABIC LETTER HEH DOACHASHMEE FINAL FORM
+        "\ufbac",  # ARABIC LETTER HEH DOACHASHMEE INITIAL FORM
+        "\ufbad",  # ARABIC LETTER HEH DOACHASHMEE MEDIAL FORM
     ],
-    # CHOTI YE / FARSI YEH / ARABIC YEH (ی / ي)
-    '\u06CC': [
+    # CHOTI YE (ی)
+    "\u06cc": [
         # Urdu/Farsi Standard (ی)
-        '\u06CC',  # ARABIC LETTER FARSI YEH
-        '\uFBFB',  # ARABIC LETTER FARSI YEH ISOLATED FORM
-        '\uFBFC',  # ARABIC LETTER FARSI YEH FINAL FORM
-        '\uFBFD',  # ARABIC LETTER FARSI YEH INITIAL FORM
-        '\uFBFE',  # ARABIC LETTER FARSI YEH MEDIAL FORM
+        "\u06cc",  # ARABIC LETTER FARSI YEH
+        "\ufbfc",  # ARABIC LETTER FARSI YEH ISOLATED FORM
+        "\ufbfd",  # ARABIC LETTER FARSI YEH FINAL FORM
+        "\ufbfe",  # ARABIC LETTER FARSI YEH INITIAL FORM
+        "\ufbff",  # ARABIC LETTER FARSI YEH MEDIAL FORM
         # Arabic/Sindhi Standard (ي)
-        '\u064A',  # ARABIC LETTER YEH
-        '\uFEF1',  # ARABIC LETTER YEH ISOLATED FORM
-        '\uFEF2',  # ARABIC LETTER YEH FINAL FORM
-        '\uFEF3',  # ARABIC LETTER YEH INITIAL FORM
-        '\uFEF4',  # ARABIC LETTER YEH MEDIAL FORM
+        "\u064a",  # ARABIC LETTER YEH
+        "\ufef1",  # ARABIC LETTER YEH ISOLATED FORM
+        "\ufef2",  # ARABIC LETTER YEH FINAL FORM
+        "\ufef3",  # ARABIC LETTER YEH INITIAL FORM
+        "\ufef4",  # ARABIC LETTER YEH MEDIAL FORM
         # Alef Maksura (ى)
-        '\u0649',  # ARABIC LETTER ALEF MAKSURA
-        '\uEEF1',  # ARABIC LETTER ALEF MAKSURA ISOLATED FORM
-        '\uEEF2',  # ARABIC LETTER ALEF MAKSURA FINAL FORM
+        "\u0649",  # ARABIC LETTER ALEF MAKSURA
+        "\ufeef",  # ARABIC LETTER ALEF MAKSURA ISOLATED FORM
+        "\ufef0",  # ARABIC LETTER ALEF MAKSURA FINAL FORM
     ],
-    '\u0626': [ # Yeh with Hamza (ئ) - Common compositional variant
-        '\u0626',  # ARABIC LETTER YEH WITH HAMZA ABOVE
-        '\uFE8B',  # ARABIC LETTER YEH WITH HAMZA ABOVE INITIAL FORM
-        '\uFE8C',  # ARABIC LETTER YEH WITH HAMZA ABOVE MEDIAL FORM
-        '\uFE89',  # ARABIC LETTER YEH WITH HAMZA ABOVE ISOLATED FORM
-        '\uFE8A',  # ARABIC LETTER YEH WITH HAMZA ABOVE FINAL FORM
+    "\u0626": [  # Yeh with Hamza (ئ) - Common compositional variant (opinionated inclusion)
+        "\u0626",  # ARABIC LETTER YEH WITH HAMZA ABOVE
+        "\ufe89",  # ARABIC LETTER YEH WITH HAMZA ABOVE ISOLATED FORM
+        "\ufe8a",  # ARABIC LETTER YEH WITH HAMZA ABOVE FINAL FORM
+        "\ufe8b",  # ARABIC LETTER YEH WITH HAMZA ABOVE INITIAL FORM
+        "\ufe8c",  # ARABIC LETTER YEH WITH HAMZA ABOVE MEDIAL FORM
     ],
     # BARI YE (ے)
-    '\u06D2': [
-        '\u06D2',  # ARABIC LETTER YEH BARREE
-        '\uFBAE',  # ARABIC LETTER YEH BARREE ISOLATED FORM
-        '\uFBAF',  # ARABIC LETTER YEH BARREE FINAL FORM
-        '\u06D3',  # ARABIC LETTER YEH BARREE WITH HAMZA ABOVE
+    "\u06d2": [
+        "\u06d2",  # ARABIC LETTER YEH BARREE
+        "\u06d3",  # ARABIC LETTER YEH BARREE WITH HAMZA ABOVE
+        "\ufbae",  # ARABIC LETTER YEH BARREE ISOLATED FORM
+        "\ufbaf",  # ARABIC LETTER YEH BARREE FINAL FORM
+        "\ufbb0",  # ARABIC LETTER YEH BARREE WITH HAMZA ABOVE ISOLATED FORM
+        "\ufbb1",  # ARABIC LETTER YEH BARREE WITH HAMZA ABOVE FINAL FORM
     ],
     # KASHEEDA / TATWEEL (ـ)
     # Mapping to empty string is a common way to 'strip' it during normalization
-    '': [
-        '\u0640',  # ARABIC TATWEEL
+    "": [
+        "\u0640",  # ARABIC TATWEEL
     ],
 }
 # URDU VARIANT MAP END
@@ -383,13 +384,13 @@ effectively filtering out visual representations.
 
 # LIGATURE MAP START
 LIGATURE_MAP: dict[str, str] = {
-    '\uFEFB': '\u0644\u0627',  # LAM WITH ALEF ISOLATED -> ل + ا
-    '\uFEFC': '\u0644\u0627',  # LAM WITH ALEF FINAL -> ل + ا
-    '\uFEF5': '\u0644\u0622',  # LAM WITH ALEF MADDA ISOLATED -> ل + آ
-    '\uFEF6': '\u0644\u0622',  # LAM WITH ALEF MADDA FINAL -> ل + آ
+    "\ufefb": "\u0644\u0627",  # ARABIC LIGATURE LAM WITH ALEF ISOLATED FORM -> ل + ا
+    "\ufefc": "\u0644\u0627",  # ARABIC LIGATURE LAM WITH ALEF FINAL FORM -> ل + ا
+    "\ufef5": "\u0644\u0622",  # ARABIC LIGATURE LAM WITH ALEF WITH MADDA ABOVE ISOLATED FORM -> ل + آ
+    "\ufef6": "\u0644\u0622",  # ARABIC LIGATURE LAM WITH ALEF WITH MADDA ABOVE FINAL FORM -> ل + آ
 }
 # LIGATURE MAP END
-"""Urdu ligature mapping to base characters."""
+"""Urdu ligature mapping to sequences of base characters."""
 
 URDU_VARIANT_REVERSAL_MAP: dict[str, str] = {
     v: base for base, variants in URDU_VARIANT_MAP.items() for v in variants
@@ -401,6 +402,7 @@ This is automatically generated from the `URDU_VARIANT_MAP`. It is used to
 normalize the input text for subsequent processing.
 """
 
+
 # ******************************************************************************
 def normalize(text: str) -> str:
     """
@@ -410,7 +412,7 @@ def normalize(text: str) -> str:
 
     1. Strips leading/trailing whitespace using :py:func:`strip`.
     2. Normalizes specific characters via :py:func:`romanalfaz.utils.normalizeUrduChars`.
-    3. Removes non-alphanumeric marks, digits, and punctuation via :py:func:`romanalfaz.utils.normalizeNonChars`.
+    3. Removes non-alphanumeric marks, digits, and punctuation via :py:func:`romanalfaz.utils.removeNonLetterChars`.
     4. Finally, normalizes all internal whitespace sequences to a single `space` using
        :py:func:`romanalfaz.utils.normalizeWhiteSpace`.
 
@@ -446,7 +448,7 @@ def normalize(text: str) -> str:
     # Pipeline execution: Apply normalization steps in sequence.
     # 1. strip(): Removes leading/trailing whitespace to avoid processing it as content.
     # 2. normalizeUrduChars(): Handles specific character encoding issues (e.g., Urdu).
-    # 3. normalizeNonChars(): Cleans the text by removing marks, digits, and punctuation.
+    # 3. removeNonLetterChars(): Cleans the text by removing marks, digits, and punctuation.
     # 4. normalizeWhiteSpace(): Collapses multiple spaces into single spaces for readability.
     return normalizeWhiteSpace(removeNonLetterChars(normalizeUrduChars(text.strip())))
 
@@ -458,7 +460,7 @@ def normalizeUrduChars(text: str) -> str:
 
     This function processes input text to handle:
 
-      #. Multi-character ligatures (e.g., combining characters that look like single glyphs).
+      #. Ligature presentation forms (single characters that render as a ligature, e.g., lam-alef).
       #. Positional variants (initial, medial, final, isolated forms) mapped back to base characters.
 
     The output is a string containing only the standard base Urdu characters .
@@ -480,9 +482,10 @@ def normalizeUrduChars(text: str) -> str:
         # Return an empty string immediately if the input is None or empty.
         return ""
 
-    # Step 1: Handle Multi-character Ligatures
-    # LIGATURE_MAP is a dictionary where keys are multi-character sequences
-    # (e.g., "شہ") and values are the single base character they represent (e.g., "ش").
+    # Step 1: Handle Ligature Presentation Forms
+    # LIGATURE_MAP is a dictionary where keys are single ligature presentation
+    # form characters (e.g., lam-alef U+FEFB) and values are the two base
+    # characters they decompose into (e.g., "لا").
     # We iterate through each pair and replace occurrences in the text.
     for ligature, replacement in LIGATURE_MAP.items():
         text = text.replace(ligature, replacement)
@@ -581,7 +584,9 @@ def removeNonLetterChars(text: str) -> str:
     cleanedText = removeMarks(text)
 
     # Step 2: Remove Digits, Punctuation (P), Symbols (S), and Control chars (C).
-    return ''.join([c for c in cleanedText if not ud.category(c).startswith(('C', 'P', 'S', 'Nd'))])
+    return "".join(
+        [c for c in cleanedText if not ud.category(c).startswith(("C", "P", "S", "Nd"))]
+    )
 
 
 # ******************************************************************************
@@ -632,12 +637,12 @@ def removeMarks(text: str) -> str:
     # technically combining marks (or specific base forms in some contexts).
     # These are critical for displaying 'آ' and 'ئ' correctly without relying solely on
     # base character normalization.
-    preservedMarks = {'\u0653', '\u0654'}
+    preservedMarks = {"\u0653", "\u0654"}
 
     # Step 2: Normalize to NFD (Normalization Form Decomposition)
     # NFD breaks down characters into their constituent parts: the base character + any
     # combining marks (diacritics). For example, 'آ' becomes [Base 'ا', Combining Madda].
-    nfdForm = ud.normalize('NFD', text)
+    nfdForm = ud.normalize("NFD", text)
 
     # Step 3: Filter Characters
     # We iterate through each character in the decomposed string and apply two conditions:
@@ -651,7 +656,7 @@ def removeMarks(text: str) -> str:
     # The filtered string is now a mix of base characters and preserved marks.
     # We re-compose them into NFC form to ensure the output is a valid, standard Unicode
     # string where necessary ligatures are formed correctly for display purposes.
-    return ud.normalize('NFC', token)
+    return ud.normalize("NFC", token)
 
 
 # ******************************************************************************
