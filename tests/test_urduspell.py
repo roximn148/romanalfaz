@@ -5,7 +5,7 @@ import unicodedata
 
 import pytest
 
-from romanalfaz.utils import (
+from romanalfaz.urduspell import (
     LIGATURE_MAP,
     URDU_VARIANT_MAP,
     URDU_VARIANT_REVERSAL_MAP,

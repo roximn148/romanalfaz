@@ -146,27 +146,27 @@ normalization process.
 Implementation
 ==============
 
-.. automodule:: romanalfaz.utils
+.. automodule:: romanalfaz.urduspell
    :members:
    :undoc-members:  # includes objects without docstrings
    :show-inheritance: # shows base classes
    :exclude-members: URDU_VARIANT_MAP, URDU_VARIANT_REVERSAL_MAP, LIGATURE_MAP
 
-.. autodata:: romanalfaz.utils.URDU_VARIANT_MAP
+.. autodata:: romanalfaz.urduspell.URDU_VARIANT_MAP
    :no-value:
 
-.. literalinclude:: ../src/romanalfaz/utils.py
+.. literalinclude:: ../src/romanalfaz/urduspell.py
    :language: python
    :start-after: # URDU VARIANT MAP START
    :end-before: # URDU VARIANT MAP END
 
-.. autodata:: romanalfaz.utils.URDU_VARIANT_REVERSAL_MAP
+.. autodata:: romanalfaz.urduspell.URDU_VARIANT_REVERSAL_MAP
    :no-value:
 
-.. autodata:: romanalfaz.utils.LIGATURE_MAP
+.. autodata:: romanalfaz.urduspell.LIGATURE_MAP
    :no-value:
 
-.. literalinclude:: ../src/romanalfaz/utils.py
+.. literalinclude:: ../src/romanalfaz/urduspell.py
    :language: python
    :start-after: # LIGATURE MAP START
    :end-before: # LIGATURE MAP END
