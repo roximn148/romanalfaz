@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+## [0.1.0a6] - 2026-10-28
+
 ### Fixed
 - URDU_VARIANT_MAP now lists the correct own presentation forms for HEH
   DOACHASHMEE (U+06BE) and FARSI YEH (U+06CC), and uses the real ALEF MAKSURA
