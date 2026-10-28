@@ -45,7 +45,14 @@ class Vocabulary:
 
         Args:
             data (dict[str, int], optional): Dictionary mapping words to their initial counts.
+
+        Raises:
+            AssertionError: If `data` contains a key that normalizes to empty,
+                since such a key cannot represent a word.
         """
+        assert data is None or all(len(normalize(w)) > 0 for w in data), (
+            "data keys must normalize to non-empty words"
+        )
         self.counter = Counter(data) if data else Counter()
         self.completed = set()
         self.onChangeCallbacks: list[Callable[[], None]] = []
@@ -66,11 +73,18 @@ class Vocabulary:
         Args:
             word (str): The word to add or update.
             count (int): Number of times to increment the word's frequency. Defaults to 1.
+
+        Raises:
+            AssertionError: If `word` is not a string, is empty, or normalizes
+                to empty (e.g., a tatweel-only or diacritic-only string), since
+                such a word cannot represent a word; or if `count` is not a
+                positive integer.
         """
         assert isinstance(word, str)
         assert len(word) > 0
         assert isinstance(count, int)
         assert count >= 1
+        assert len(normalize(word)) > 0, "word must normalize to a non-empty word"
 
         self.counter[word] += count
         self.notifyChanges()
@@ -328,6 +342,14 @@ class RomanAlfaz:
 
         Args:
             vocab (Vocabulary): The vocabulary instance to start monitoring.
+
+        Note:
+            Every mutation on an attached Vocabulary triggers a full
+            recompileLookup, so adding words one by one to an attached
+            Vocabulary costs a recompile per word (O(N^2) for N words).
+            Populate the Vocabulary before attaching it: a standalone
+            Vocabulary built in bulk costs a single recompile. The engine
+            handles infrequent single additions without issue.
         """
         # Guard clause: Prevent duplicate registrations which would cause
         # identical data to be counted twice during aggregation.
@@ -372,6 +394,12 @@ class RomanAlfaz:
         word collisions by summing their frequencies, and fully rebuilds both
         the SymSpell fuzzy-search index and the Arabic reverse mapping.
 
+        Raises:
+            AssertionError: If a stored word contains characters outside the
+                Arabic->Roman encoding map. The assertion message names the
+                offending word, and the error propagates from the Vocabulary
+                mutation that triggered this recompile.
+
         Complexity:
             O(N) where N is the total number of unique words across all tracked
             Vocabulary instances.
@@ -405,7 +433,7 @@ class RomanAlfaz:
         for arWord, freq in aggregateCounter.items():
             # Convert native script to Romanized representation
             encRomanWord, undef = tafseerUrduAr2Rm(arWord)
-            assert undef == 0
+            assert undef == 0, f"{undef} unmapped character(s) in word {arWord!r}"
 
             # Accumulate weight for the Roman word entry (used by SymSpell)
             romanFreqCounter[encRomanWord] += freq

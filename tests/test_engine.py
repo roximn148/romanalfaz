@@ -63,6 +63,20 @@ class TestVocabulary:
         with pytest.raises(AssertionError):
             v.add("latin", -5)  # Negative entry handle نہیں ہوتی
 
+    def testAddRejectsNormalizeToEmpty(self):
+        """Rejects words whose normalized form is empty (tatweel-only, diacritic-only strings)."""
+        v = Vocabulary()
+        with pytest.raises(AssertionError):
+            v.add("\u0640")  # ARABIC TATWEEL only
+        with pytest.raises(AssertionError):
+            v.add("\u064e")  # ARABIC FATHA only
+        assert len(v.counter) == 0
+
+    def testInitRejectsNormalizeToEmpty(self):
+        """The data dict is fenced like add: keys that normalize to empty are rejected."""
+        with pytest.raises(AssertionError):
+            Vocabulary({"\u0640": 1})  # ARABIC TATWEEL only
+
     def testRemoveWord(self):
         """Removes a word from both counter tracking and the completion status set."""
         v = Vocabulary({"لفظ": 2, "word": 4})
@@ -231,6 +245,13 @@ class TestRomanAlfaz:
         assert ra.symSpell.words["DNYA"] == 15  # 10 + 5
         assert ra.symSpell.words["WZYR"] == 5
         assert ra.symSpell.words["ZRORT"] == 2
+
+    def testRecompileAssertionNamesUnmappedWord(self):
+        """The recompile unmapped-character assertion names the offending word."""
+        v = Vocabulary({"abc": 1})  # Latin chars are outside the Arabic->Roman map
+        with pytest.raises(AssertionError) as excinfo:
+            RomanAlfaz([v])
+        assert "abc" in str(excinfo.value)
 
     def testRemoveVocabularyPurgesAndRecalculates(self):
         """Verify that removing a vocabulary drops its frequency weights immediately."""
