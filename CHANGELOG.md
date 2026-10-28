@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org).
   :py:mod: reference style; algorithm.py, engine.py, and docs/conf.py were
   reformatted with ruff
 - Prose simplified in docs/utils.rst and src/romanalfaz/utils.py
+- Vocabulary.add and the Vocabulary data dict now reject words whose
+  normalized form is empty (e.g., tatweel-only or diacritic-only
+  strings), which previously stored a phantom key that produced an
+  empty-key entry in the lookup index
+- The assertion raised when a stored word contains characters outside
+  the Arabic->Roman map now names the offending word
 
 ### Added
 - Purpose, Scope, and Limitations sections to the normalization
