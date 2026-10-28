@@ -179,3 +179,48 @@ Suggestion(arabic='کتاب', encodedRoman='KTAB', frequency=4643)
   One-Edit matches:
   Two-Edit matches:
 ```
+
+## Vocabulary File CLI
+
+The `romanalfaz` command inspects and rewrites SymSpell vocabulary files
+(`word$frequency` per line). Every file command applies a normalization
+method — `urdu-spell` by default — so words are compared and rewritten in
+canonical form. The input file is never modified unless `--in-place` is passed
+explicitly.
+
+| Command | Purpose |
+| --- | --- |
+| `validate FILE` | Report malformed lines, non-canonical spellings, words that normalize to empty or cannot be romanized, and duplicate canonical forms |
+| `normalize FILE` | Rewrite in canonical form, summing the frequencies of entries that normalize to the same word; requires `-o`, `--in-place`, or `--preview` |
+| `words FILE` | Print the canonical words, sorted, without frequencies (`-o` writes them to a file) |
+| `merge FIRST SECOND` | Union two files, summing the frequencies of shared words; requires `-o` |
+| `subtract FIRST SECOND` | Remove the words of `SECOND` from `FIRST`; requires `-o` |
+| `list` | Describe the available normalization methods, their scope, and their pipeline stages |
+
+```bash
+# Check the bundled vocabulary
+romanalfaz validate src/romanalfaz/UrduWords5k.sym
+
+# See what a rewrite would change, without writing anything
+romanalfaz normalize words.sym --preview
+
+# Write the canonical form to a new file
+romanalfaz normalize words.sym -o words.canonical.sym
+
+# Export the sorted word list
+romanalfaz words words.sym -o words.txt
+
+# Union two lists, then remove a blacklist
+romanalfaz merge words.sym extra.sym -o merged.sym
+romanalfaz subtract merged.sym blacklist.sym -o final.sym
+
+# Show the registered normalization methods
+romanalfaz list
+```
+
+The same interface is available as `python -m romanalfaz`. Select a method
+with `--normalize METHOD`; `urdu-spell` is the only method registered for now.
+Reports and exported data go to standard output, while status messages and
+warnings go to standard error. Exit codes are `0` for success, `1` when
+`validate` finds issues or an I/O error occurs, and `2` for a usage error.
+

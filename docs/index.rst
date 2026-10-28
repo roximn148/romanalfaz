@@ -64,6 +64,7 @@ Core Workflow
    installation
    quickstart
    usage
+   cli
    reference
 
 
