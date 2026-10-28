@@ -24,6 +24,8 @@ dependencies = [
     "symspellpy>=6.9.0",
     "unicodedataplus>=16.0.0.post1",
 ]
+[project.scripts]
+romanalfaz = "romanalfaz.cli:main"
 [dependency-groups]
 dev = [
     "myst-nb>=1.4.0",

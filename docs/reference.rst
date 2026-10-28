@@ -12,4 +12,5 @@ Reference
 
    algorithm
    engine
+   normalization
    urduspell
