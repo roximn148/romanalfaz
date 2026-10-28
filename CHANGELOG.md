@@ -13,16 +13,24 @@ and this project adheres to [Semantic Versioning](https://semver.org).
   presentation forms (U+FEEF/U+FEF0) instead of unassigned code points
 - Every presentation form is now listed exactly once, so
   URDU_VARIANT_REVERSAL_MAP has no code point owned by two base characters
+- The Sphinx build no longer warns that the myst_nb intermediate
+  processed.ipynb artifacts are not included in any toctree; docs/conf.py
+  now excludes the myst_nb execution output directories (build,
+  jupyter_execute)
 
 ### Changed
-- Code points are ordered ascending within the YEH WITH HAMZA ABOVE (U+0626)
-  and YEH BARREE (U+06D2) entries
-- utils.py inline comments now use the official Unicode character names
-- utils.py docstrings fixed to match actual behavior (removed the dead
-  `normalizeNonChars` reference, corrected the LIGATURE_MAP key/value
-  description)
+- utils.py, algorithm.py, and engine.py module docstrings now use the
+  :py:mod: reference style; algorithm.py, engine.py, and docs/conf.py were
+  reformatted with ruff
+- Prose simplified in docs/utils.rst and src/romanalfaz/utils.py
 
 ### Added
+- Purpose, Scope, and Limitations sections to the normalization
+  documentation page (docs/utils.rst), plus the utils.py module docstring
+  description of the disjoint pipeline stages
+- PRESERVED_MARKS constant in utils.py, and the preserved-marks contract
+  between normalizeUrduChars and removeMarks documented in their
+  docstrings
 - Test coverage for the URDU_VARIANT_MAP, URDU_VARIANT_REVERSAL_MAP, and
   LIGATURE_MAP data structures and for the normalization of the repaired
   code points

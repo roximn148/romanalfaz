@@ -4,9 +4,10 @@
 #    LICENSE.txt file in the root directory of this source tree.
 # ******************************************************************************
 """
-This module contains the transliteration implementation logic for the romanalfaz
+The :py:mod:`romanalfaz.engine` module contains the transliteration implementation logic for the romanalfaz
 package.
 """
+
 # ******************************************************************************
 from collections import Counter, defaultdict
 from collections.abc import Callable
@@ -141,7 +142,7 @@ class Vocabulary:
         self.notifyChanges()
 
     # --------------------------------------------------------------------------
-    def save(self, filename: str, sep: str = '$'):
+    def save(self, filename: str, sep: str = "$"):
         """Persist completed words and their frequencies to a file.
 
         Writes only words that have been marked as completed, sorted by frequency (highest first).
@@ -164,7 +165,7 @@ class Vocabulary:
 
     # --------------------------------------------------------------------------
     @classmethod
-    def load(cls, filename: str, sep: str='$') -> 'Vocabulary':
+    def load(cls, filename: str, sep: str = "$") -> "Vocabulary":
         """Reconstruct a Vocabulary instance from a saved SymSpell file.
 
         Args:
@@ -181,7 +182,7 @@ class Vocabulary:
         assert not sep.isdigit(), "Seperator cannot be a digit"
 
         newVocab = cls()
-        with open(filename, 'r', encoding="utf-8") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -201,6 +202,7 @@ class Suggestion(NamedTuple):
     All fields carry defaults, so ``Suggestion()`` constructs the blank
     (undefined) suggestion with no word and zero frequency.
     """
+
     arabic: str = ""
     """(str): The original word in Arabic script."""
     encodedRoman: str = ""
@@ -212,9 +214,11 @@ class Suggestion(NamedTuple):
         return f"{self.arabic}:{self.encodedRoman} [{self.frequency:}]"
 
     def __repr__(self) -> str:
-        return (f"Suggestion(arabic={self.arabic!r}, "
-                f"encodedRoman={self.encodedRoman!r}, "
-                f"frequency={self.frequency!r})")
+        return (
+            f"Suggestion(arabic={self.arabic!r}, "
+            f"encodedRoman={self.encodedRoman!r}, "
+            f"frequency={self.frequency!r})"
+        )
 
     # **************************************************************************
     def isUndefined(self) -> bool:
@@ -262,6 +266,7 @@ class RomanAlfaz:
         vocabularies (list[Vocabulary]): A collection holding references to all
             currently attached and monitored Vocabulary instances active in the system.
     """
+
     def __init__(self, vocabularies: list[Vocabulary] | None = None):
         """
         Initializes the RomanAlfaz coordinator with optional starter vocabularies.
@@ -421,9 +426,9 @@ class RomanAlfaz:
                 self.reverseMapping[encRomanWord].add((arWord, freq))
 
     # **************************************************************************
-    def dictLookup(self, encRomanWord: str, *, distance: int) -> tuple[list[SuggestItem],
-                                                                       list[SuggestItem],
-                                                                       list[SuggestItem]]:
+    def dictLookup(
+        self, encRomanWord: str, *, distance: int
+    ) -> tuple[list[SuggestItem], list[SuggestItem], list[SuggestItem]]:
         """
         Performs a fuzzy lookup in the dictionary based on edit distance.
 
@@ -448,9 +453,11 @@ class RomanAlfaz:
 
         # Query SymSpell with specified edit distance constraints
         suggestions = self.symSpell.lookup(
-            encRomanWord, Verbosity.CLOSEST,
+            encRomanWord,
+            Verbosity.CLOSEST,
             max_edit_distance=distance,
-            include_unknown=False)
+            include_unknown=False,
+        )
 
         if distance == 0:
             # Filter strictly for exact matches (edit distance 0)
@@ -471,7 +478,9 @@ class RomanAlfaz:
             return s0, s1, s2
 
     # **************************************************************************
-    def suggest(self, romanWord: str, distance: int = 1, maxPredictions: int | None = 5) -> tuple[list[Suggestion], list[Suggestion], list[Suggestion]]:
+    def suggest(
+        self, romanWord: str, distance: int = 1, maxPredictions: int | None = 5
+    ) -> tuple[list[Suggestion], list[Suggestion], list[Suggestion]]:
         """
         Generates a ranked list of suggested arabic-script Urdu words based on
         roman-script input. This method performs the fuzzy lookup and returns
@@ -510,10 +519,13 @@ class RomanAlfaz:
             return [], [], []
 
         # ------------------------------------------------------------------
-        def getSuggestionsTier(suggestions:list[tuple[list[SuggestItem],
-                                                      list[SuggestItem],
-                                                      list[SuggestItem]]],
-                               tier: int, atmost: int | None = None):
+        def getSuggestionsTier(
+            suggestions: list[
+                tuple[list[SuggestItem], list[SuggestItem], list[SuggestItem]]
+            ],
+            tier: int,
+            atmost: int | None = None,
+        ):
             """
             Helper function to extract a specific edit distance tier of suggestions,
             then flatten them into a single list and remove any duplicates.
@@ -535,52 +547,58 @@ class RomanAlfaz:
 
             # Return only the top N unique suggestions
             return matches[:atmost]
+
         # ------------------------------------------------------------------
 
         # Perform lookup for each Arabic permutation of the input word
-        suggestionsList = [self.dictLookup(word, distance=distance) for word in encRomanWords]
+        suggestionsList = [
+            self.dictLookup(word, distance=distance) for word in encRomanWords
+        ]
 
         # Process the three tiers
         results = []
         for tier in (0, 1, 2):
-            tierSuggestions = getSuggestionsTier(suggestionsList,
-                                                 tier=tier,
-                                                 atmost=maxPredictions)
+            tierSuggestions = getSuggestionsTier(
+                suggestionsList, tier=tier, atmost=maxPredictions
+            )
             if tierSuggestions:
                 tierSuggestions = [
                     Suggestion(wd, sg.term, fr)
                     for sg in tierSuggestions
                     for (wd, fr) in self.reverseMapping.get(sg.term, set())
                 ]
-                tierSuggestions = sorted(tierSuggestions,
-                                         key=lambda item: item.frequency,
-                                         reverse=True)
+                tierSuggestions = sorted(
+                    tierSuggestions, key=lambda item: item.frequency, reverse=True
+                )
             results.append(tierSuggestions)
 
         return results[0], results[1], results[2]
 
     # **************************************************************************
-    def getExactMatches(self, romanWord: str, maxPredictions: int | None = 5) -> list[Suggestion]:
+    def getExactMatches(
+        self, romanWord: str, maxPredictions: int | None = 5
+    ) -> list[Suggestion]:
         """
-       Generates of suggested arabic-script Urdu words which match exactly with the
-       roman-script input.
+        Generates of suggested arabic-script Urdu words which match exactly with the
+        roman-script input.
 
-       Args:
-           romanWord (str): The roman-script word to transliterate.
-           maxPredictions (int): Maximum number of unique suggestions
-               to provide (default is 5). Use ``None`` to get
-               all suggestions.
+        Args:
+            romanWord (str): The roman-script word to transliterate.
+            maxPredictions (int): Maximum number of unique suggestions
+                to provide (default is 5). Use ``None`` to get
+                all suggestions.
 
-       Returns:
-           list[Suggestion]: A list of :py:class:`Suggestion` exact matching items
-           in order of word frequency.
+        Returns:
+            list[Suggestion]: A list of :py:class:`Suggestion` exact matching items
+            in order of word frequency.
 
-       Raises:
-           AssertionError: If `romanWord` is not a string.
-       """
-        suggestions, _, _ = self.suggest(romanWord, distance=1, maxPredictions=maxPredictions)
+        Raises:
+            AssertionError: If `romanWord` is not a string.
+        """
+        suggestions, _, _ = self.suggest(
+            romanWord, distance=1, maxPredictions=maxPredictions
+        )
         return suggestions
-
 
     # **************************************************************************
     def getBestMatch(self, romanWord: str) -> Suggestion | None:
