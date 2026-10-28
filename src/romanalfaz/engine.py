@@ -20,7 +20,7 @@ from symspellpy.suggest_item import SuggestItem
 
 from .algorithm import tafseerUrduAr2Rm, tafseerUrduRm2Rm
 from .exceptions import DictionaryNotFoundError
-from .utils import normalize
+from .urduspell import normalize
 
 
 # ******************************************************************************
@@ -653,7 +653,7 @@ class RomanAlfaz:
 
         A word counts as present when it is stored in any attached Vocabulary.
         Both the stored word and the input are compared after
-        :py:func:`romanalfaz.utils.normalize`, so input that differs from the
+        :py:func:`romanalfaz.urduspell.normalize`, so input that differs from the
         stored spelling only in surface form (positional letter forms, tatweel,
         removable diacritics) still reports present.
 

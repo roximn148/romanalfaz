@@ -12,4 +12,4 @@ Reference
 
    algorithm
    engine
-   utils
+   urduspell

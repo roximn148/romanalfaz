@@ -12,7 +12,7 @@ algorithm and its helper functions.
 import itertools
 import re
 
-from .utils import normalize, normalizeWhiteSpace
+from .urduspell import normalize, normalizeWhiteSpace
 
 # ******************************************************************************
 # URDU ARABIC2ROMAN ENCODING MAP START
@@ -78,7 +78,7 @@ def tafseerUrduAr2Rm(word: str, keep: bool = True) -> tuple[str, int]:
     """
     Converts a string containing Urdu text in arabic-script to intermediate roman-script.
 
-    The input word is normalized to base characters using :py:func:`romanalfaz.utils.normalize`
+    The input word is normalized to base characters using :py:func:`romanalfaz.urduspell.normalize`
     before processing it for romanization.
 
     This function also handles specific orthographic rule of the Urdu language, treating

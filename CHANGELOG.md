@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+### Changed
+- The utils module is renamed to urduspell, establishing the per-method
+  module convention: each normalization method lives in its own module, and
+  the module is now identified as the urdu-spell normalization method
+  implementation. No code changes.
+
 ## [0.1.0a6] - 2026-10-28
 
 ### Fixed
