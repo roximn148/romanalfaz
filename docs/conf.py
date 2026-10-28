@@ -7,39 +7,45 @@ import sys
 from pathlib import Path
 
 # Source code Path -------------------------------------------------------------
-sys.path.insert(0, str(Path('..', 'src').resolve()))
+sys.path.insert(0, str(Path("..", "src").resolve()))
 
 # Project information ----------------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'Roman Alfaz'
-copyright = '2026, RoXimn. Licensed under the MIT license'
-author = 'RoXimn'
-release = '0.1.0a5'
+project = "Roman Alfaz"
+copyright = "2026, RoXimn. Licensed under the MIT license"
+author = "RoXimn"
+release = "0.1.0a5"
 
 # General configuration --------------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 extensions = [
-    'sphinx_rtd_theme',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
-    'myst_nb',
-    'sphinx.ext.todo',
+    "sphinx_rtd_theme",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "myst_nb",
+    "sphinx.ext.todo",
 ]
 
-templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+templates_path = ["_templates"]
+exclude_patterns = [
+    "_build",
+    "build",  # myst_nb execution output dir (intermediate .ipynb artifacts)
+    "jupyter_execute",  # myst_nb execution cache dir
+    "Thumbs.db",
+    ".DS_Store",
+]
 
 html_theme = "sphinx_rtd_theme"
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
-autodoc_member_order = 'bysource'
+autodoc_member_order = "bysource"
 todo_include_todos = True
 
 source_suffix = {
-    '.rst': 'restructuredtext',
-    '.ipynb': 'myst-nb',
-    '.myst': 'myst-nb',
+    ".rst": "restructuredtext",
+    ".ipynb": "myst-nb",
+    ".myst": "myst-nb",
 }
 
 myst_enable_extensions = [

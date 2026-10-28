@@ -4,8 +4,37 @@
 #    LICENSE.txt file in the root directory of this source tree.
 # ******************************************************************************
 """
-This module contains the normalization functions for Urdu arabic-script
+The :py:mod:`romanalfaz.utils` module contains the normalization functions for Urdu arabic-script
 Unicode text.
+
+In the broad sense, normalization is a mapping from a defined *Input Set* of
+Unicode characters to a canonical *Output Set*: it reduces the many valid but variant
+spellings of a word (positional and presentation forms, composed ligatures,
+linguistic and formatting marks, and cross-lingual character substitutions)
+to a single standard form suited to a fixed processing task. This module is
+one concrete realization of that idea, scoped to the *Word Lookup* constraint
+of the general problem: the expected input is already tokenized words of any
+Unicode text content, and the output is normalized to the target Urdu language
+for dictionary lookup.
+
+Each defining element of that general problem is delegated to a dedicated
+stage of the :py:func:`romanalfaz.utils.normalize` pipeline, so that no stage
+performs another's work:
+
+- **Positional Variants** and **Composition/Ligatures** are resolved by
+  :py:func:`romanalfaz.utils.normalizeUrduChars`, which folds every positional
+  and presentation form, and every composed ligature, back to its base
+  character through :data:`romanalfaz.utils.URDU_VARIANT_MAP` and
+  :data:`romanalfaz.utils.LIGATURE_MAP`.
+- **Cross-Lingual Substitutions** are resolved by the same stage, which also
+  folds non-Urdu base characters (e.g. U+0624) to their Urdu counterparts.
+- **Marks (Linguistic and Formatting)** are stripped by
+  :py:func:`romanalfaz.utils.removeMarks`, which removes every combining mark
+  except the structural marks in :data:`romanalfaz.utils.PRESERVED_MARKS`;
+  :py:func:`romanalfaz.utils.removeNonLetterChars` then discards the remaining
+  non-letter residue (digits, punctuation, symbols, control characters).
+- **Whitespace** is collapsed to single spaces by
+  :py:func:`romanalfaz.utils.normalizeWhiteSpace`.
 
 Note:
     The module relies on the `unicodedataplus`_ for Unicode character properties.
@@ -16,6 +45,25 @@ Note:
 
 # ******************************************************************************
 import unicodedataplus as ud
+
+# ******************************************************************************
+# PRESERVED MARKS
+PRESERVED_MARKS: set[str] = {
+    "\u0653",  # ARABIC MADDAH ABOVE
+    "\u0654",  # ARABIC HAMZA ABOVE
+}
+"""
+The combining marks preserved by :py:func:`romanalfaz.utils.removeMarks`.
+
+These are exactly the marks carried by the precomposed base characters that
+:py:func:`romanalfaz.utils.normalizeUrduChars` retains (U+0622, ALEF WITH MADDA
+ABOVE, and U+0626, YEH WITH HAMZA ABOVE). This exact fit is the contract
+between the two stages: because the preserved marks survive the mark-stripping
+step, :py:func:`romanalfaz.utils.removeMarks` is a net no-op on every base
+character the map can output. See the Notes of
+:py:func:`romanalfaz.utils.removeMarks` and
+:py:func:`romanalfaz.utils.normalize`.
+"""
 
 # ******************************************************************************
 # URDU VARIANT MAP START
@@ -226,9 +274,9 @@ URDU_VARIANT_MAP: dict[str, list[str]] = {
         "\ufed7",  # ARABIC LETTER QAF INITIAL FORM
         "\ufed8",  # ARABIC LETTER QAF MEDIAL FORM
     ],
-    # URDU KAF (ک)
+    # KAF (ک)
     "\u06a9": [
-        # Urdu/Persian Keheh (ک)
+        # Urdu/Persian Kaf (ک)
         "\u06a9",  # ARABIC LETTER KEHEH
         "\ufb8e",  # ARABIC LETTER KEHEH ISOLATED FORM
         "\ufb8f",  # ARABIC LETTER KEHEH FINAL FORM
@@ -240,7 +288,7 @@ URDU_VARIANT_MAP: dict[str, list[str]] = {
         "\ufeda",  # ARABIC LETTER KAF FINAL FORM
         "\ufedb",  # ARABIC LETTER KAF INITIAL FORM
         "\ufedc",  # ARABIC LETTER KAF MEDIAL FORM
-        # Old Persian / Swash Kaf (ݢ)
+        # Old Persian / Swash Kaf (ݢ) ??? :TODO: Review
         "\u06a8",  # ARABIC LETTER QAF WITH THREE DOTS ABOVE
         "\ufb96",  # ARABIC LETTER GUEH ISOLATED FORM
         "\ufb97",  # ARABIC LETTER GUEH FINAL FORM
@@ -316,7 +364,7 @@ URDU_VARIANT_MAP: dict[str, list[str]] = {
         "\ufba4",  # ARABIC LETTER HEH WITH YEH ABOVE ISOLATED FORM
         "\ufba5",  # ARABIC LETTER HEH WITH YEH ABOVE FINAL FORM
     ],
-    # TEH MARBUTA GOAL (ۃ)
+    # TA MARBUTA GOAL (ۃ)
     "\u06c3": [
         # Base Character
         "\u06c3",  # ARABIC LETTER TEH MARBUTA GOAL (Urdu/Sindhi variant)
@@ -325,7 +373,7 @@ URDU_VARIANT_MAP: dict[str, list[str]] = {
         "\ufe93",  # ARABIC LETTER TEH MARBUTA ISOLATED FORM (ﺓ)
         "\ufe94",  # ARABIC LETTER TEH MARBUTA FINAL FORM (ﺔ)
     ],
-    # DO CHASHMI HE (ھ)
+    # HE DO CHASHMI (ھ)
     "\u06be": [
         "\u06be",  # ARABIC LETTER HEH DOACHASHMEE
         "\ufbaa",  # ARABIC LETTER HEH DOACHASHMEE ISOLATED FORM
@@ -419,6 +467,68 @@ def normalize(text: str) -> str:
     The goal is to produce a clean string containing primarily letters and single spaces
     between words,  for further processing or comparison.
 
+    Notes:
+        Each character class of the input is handled by exactly one stage of the
+        pipeline, so no transformation is applied twice:
+
+        - Positional presentation forms (e.g., U+FE8F, the isolated form of U+0628),
+          ligatures (e.g., U+FEFB), and U+0640 (TATWEEL) are folded back to their
+          base characters by :py:func:`romanalfaz.utils.normalizeUrduChars` only.
+        - Cross-dialect base character folds (e.g., U+0624, WAW WITH HAMZA ABOVE,
+          to U+0648, WAW) are applied by the same maps.
+        - Combining marks other than U+0653 (MADDAH ABOVE) and U+0654 (HAMZA ABOVE)
+          are removed by :py:func:`romanalfaz.utils.removeNonLetterChars` (via
+          :py:func:`romanalfaz.utils.removeMarks`).
+        - Digits, punctuation, symbols, and control characters are filtered out by
+          the same function; whitespace runs are collapsed by
+          :py:func:`romanalfaz.utils.normalizeWhiteSpace`.
+
+        The NFD normalization inside :py:func:`romanalfaz.utils.removeMarks`
+        targets only precomposed characters and never touches positional forms,
+        so the maps and NFD do not do the same work twice:
+
+        - Positional presentation forms are compatibility characters, so NFD
+          leaves them unchanged; the maps are their sole handler.
+        - Precomposed characters such as U+0622 (ALEF WITH MADDA ABOVE) decompose
+          under NFD into their base plus U+0653; because U+0653 and U+0654 are
+          preserved by :py:func:`romanalfaz.utils.removeMarks` and the final NFC
+          recomposes the character, the round trip is a net no-op. This is the
+          mechanism by which U+0622 and U+0626 (YEH WITH HAMZA ABOVE) survive
+          mark removal.
+
+        Pipeline effect on different inputs:
+
+        - U+FE8F (isolated form of U+0628): folded to U+0628 only by the maps.
+        - U+FEFB (LAM-ALEF ligature): decomposed to U+0644 U+0627 only by the maps.
+        - U+0628 U+064E (base plus FATHA): the mark is removed only by
+          :py:func:`romanalfaz.utils.removeMarks`; the maps leave marks untouched.
+        - U+0622 (precomposed): a no-op at every stage (NFD decomposes,
+          U+0653 is preserved, NFC recomposes).
+        - U+0624 (cross-dialect base): folded to U+0648 only by the maps;
+          :py:func:`romanalfaz.utils.removeMarks` leaves it unchanged.
+
+        +------------------------------+-----------------------+---------------------------+---------------+
+        | Input                        | `removeMarks` only    | `normalizeUrduChars` only | `normalize`   |
+        +==============================+=======================+===========================+===============+
+        | U+FE8F (positional form)     | U+FE8F (unchanged)    | U+0628 (folded)           | U+0628        |
+        +------------------------------+-----------------------+---------------------------+---------------+
+        | U+FEFB (ligature)            | U+FEFB (unchanged)    | U+0644 U+0627 (folded)    | U+0644 U+0627 |
+        +------------------------------+-----------------------+---------------------------+---------------+
+        | U+0628 U+064E (base + fatha) | U+0628 (mark removed) | U+0628 U+064E (unchanged) | U+0628        |
+        +------------------------------+-----------------------+---------------------------+---------------+
+        | U+0622 (precomposed)         | U+0622 (no-op)        | U+0622 (no-op)            | U+0622        |
+        +------------------------------+-----------------------+---------------------------+---------------+
+        | U+0624 (cross-dialect)       | U+0624 (no-op)        | U+0648 (folded)           | U+0648        |
+        +------------------------------+-----------------------+---------------------------+---------------+
+
+        The division of labor above rests on an exact fit: the marks preserved by
+        :py:func:`romanalfaz.utils.removeMarks` (U+0653 and U+0654) are exactly the
+        marks that the precomposed characters of the variant map's charset (its
+        keys and values) carry. This is what makes every stage a no-op on the
+        other's work. See the Notes of
+        :py:func:`romanalfaz.utils.normalizeUrduChars` and
+        :py:func:`romanalfaz.utils.removeMarks` for the two sides of this contract.
+
     Args:
         text (str): The input string to be normalized.
 
@@ -462,8 +572,20 @@ def normalizeUrduChars(text: str) -> str:
 
       #. Ligature presentation forms (single characters that render as a ligature, e.g., lam-alef).
       #. Positional variants (initial, medial, final, isolated forms) mapped back to base characters.
+      #. Cross-dialect base characters, e.g., U+0624 (WAW WITH HAMZA ABOVE) folded to U+0648 (WAW).
 
-    The output is a string containing only the standard base Urdu characters .
+    The output is a string containing only the standard base Urdu characters.
+
+    Notes:
+        The base charset this function retains -- the keys of
+        :data:`romanalfaz.utils.URDU_VARIANT_MAP` -- is chosen by dialect: which
+        letters are canonical Urdu. That choice is constrained by the downstream
+        :py:func:`romanalfaz.utils.removeMarks` stage: every retained base
+        character may only carry the marks that
+        :py:func:`romanalfaz.utils.removeMarks` preserves (U+0653 and U+0654),
+        otherwise the mark-stripping step would alter a letter this function just
+        produced. This is this function's side of the contract described in
+        :py:func:`romanalfaz.utils.normalize`.
 
     Args:
         text (str): The input string potentially containing ligatures or positional variants.
@@ -554,8 +676,8 @@ def removeNonLetterChars(text: str) -> str:
     """
     Removes marks, digits, punctuation, symbols and control chars based on Unicode category.
 
-    This function removes special marks (e.g., accents or diacritics),
-    all numeric digits, all Punctuation, Symbols, and Control characters.
+    This function removes marks (e.g., accents or diacritics), all numeric
+    digits, all Punctuation, Symbols, and Control characters.
     The result is a string containing only alphanumeric letters and
     whitespace (if any).
 
@@ -606,6 +728,19 @@ def removeMarks(text: str) -> str:
 
     Other combining characters (like shadda, fatha, kasra, etc.) are removed.
 
+    Notes:
+        The preserved set is this function's side of a contract with the upstream
+        :py:func:`romanalfaz.utils.normalizeUrduChars` stage. U+0653 and U+0654 are
+        the marks carried by the precomposed base characters that the variant
+        map retains (U+0622, ALEF WITH MADDA ABOVE, and U+0626, YEH WITH HAMZA
+        ABOVE). NFD decomposes such a letter into its base plus one of these
+        preserved marks, the filter keeps both parts, and the final NFC recomposes
+        the original character: this function is a net no-op on every base
+        character the map can output. That keeps the two stages disjoint: the map
+        folds letters, this function strips marks, and neither does the other's
+        work. If the variant map's base charset ever carries marks other than
+        U+0653 or U+0654, this preserved set must be extended in the same change.
+
     Args:
         text (str): The input string containing Urdu text with potential diacritics.
 
@@ -632,27 +767,20 @@ def removeMarks(text: str) -> str:
         # Return an empty string immediately if the input is None or empty.
         return ""
 
-    # Step 1: Define Preserved Marks
-    # We explicitly list the Unicode characters that must remain even though they are
-    # technically combining marks (or specific base forms in some contexts).
-    # These are critical for displaying 'آ' and 'ئ' correctly without relying solely on
-    # base character normalization.
-    preservedMarks = {"\u0653", "\u0654"}
-
-    # Step 2: Normalize to NFD (Normalization Form Decomposition)
+    # Step 1: Normalize to NFD (Normalization Form Decomposition)
     # NFD breaks down characters into their constituent parts: the base character + any
     # combining marks (diacritics). For example, 'آ' becomes [Base 'ا', Combining Madda].
     nfdForm = ud.normalize("NFD", text)
 
-    # Step 3: Filter Characters
+    # Step 2: Filter Characters
     # We iterate through each character in the decomposed string and apply two conditions:
-    # 1. Keep if it is one of our explicitly preserved marks (Madda or Hamza Above).
+    # 1. Keep if it is one of the PRESERVED_MARKS (Madda or Hamza Above).
     # 2. Keep if it is NOT a combining character (ud.combining(c) returns True for diacritics).
     # This effectively removes all other diacritical marks while keeping the base letters
     # and the essential structural marks.
-    token = "".join([c for c in nfdForm if c in preservedMarks or not ud.combining(c)])
+    token = "".join([c for c in nfdForm if c in PRESERVED_MARKS or not ud.combining(c)])
 
-    # Step 4: Normalize to NFC (Normalization Form Composition)
+    # Step 3: Normalize to NFC (Normalization Form Composition)
     # The filtered string is now a mix of base characters and preserved marks.
     # We re-compose them into NFC form to ensure the output is a valid, standard Unicode
     # string where necessary ligatures are formed correctly for display purposes.

@@ -4,9 +4,10 @@
 # LICENSE.txt file in the root directory of this source tree.
 # ******************************************************************************
 """
-This module contains the Urdu language roman-to-arabic script transliteration
+The :py:mod:`romanalfaz.algorithm` module contains the Urdu language roman-to-arabic script transliteration
 algorithm and its helper functions.
 """
+
 # ******************************************************************************
 import itertools
 import re
@@ -16,53 +17,53 @@ from .utils import normalize, normalizeWhiteSpace
 # ******************************************************************************
 # URDU ARABIC2ROMAN ENCODING MAP START
 URDU_ARABIC2ROMAN_ENCODING_MAP: dict[str, str] = {
-    '\u0627': 'A',   # ARABIC LETTER ALEF
-    '\u0639': 'A',   # ARABIC LETTER AIN
-    '\u0622': 'AA',  # ARABIC LETTER ALEF WITH MADDA ABOVE
-    '\u0623': 'A',   # ARABIC LETTER ALEF WITH HAMZA ABOVE
-    '\u0628': 'B',   # ARABIC LETTER BEH
-    '\u067E': 'P',   # ARABIC LETTER PEH
-    '\u062a': 'T',   # ARABIC LETTER TEH
-    '\u0637': 'T',   # ARABIC LETTER TAH
-    '\u0679': 'T',   # ARABIC LETTER TTEH
-    '\u06C3': 'T',   # ARABIC LETTER TEH MARBUTA GOAL
-    '\u062c': 'J',   # ARABIC LETTER JEEM
-    '\u062b': 'S',   # ARABIC LETTER THEH
-    '\u0633': 'S',   # ARABIC LETTER SEEN
-    '\u0635': 'S',   # ARABIC LETTER SAD
-    '\u0686': 'CH',  # ARABIC LETTER TCHEH
-    '\u062d': 'H',   # ARABIC LETTER HAH
-    '\u06c1': 'H',   # ARABIC LETTER HEH GOAL
-    '\u06c2': 'H',   # ARABIC LETTER HEH GOAL WITH HAMZA ABOVE
-    '\u06be': 'H',   # ARABIC LETTER HEH DOACHASHMEE
-    '\u0647': 'H',   # ARABIC LETTER HEH
-    '\u062e': 'KH',  # ARABIC LETTER KHAH
-    '\u062f': 'D',   # ARABIC LETTER DAL
-    '\u0688': 'D',   # ARABIC LETTER DDAL
-    '\u0630': 'Z',   # ARABIC LETTER THAL
-    '\u0632': 'Z',   # ARABIC LETTER ZAIN
-    '\u0636': 'Z',   # ARABIC LETTER DAD
-    '\u0638': 'Z',   # ARABIC LETTER ZAH
-    '\u0698': 'Z',   # ARABIC LETTER JEH
-    '\u0631': 'R',   # ARABIC LETTER REH
-    '\u0691': 'R',   # ARABIC LETTER RREH
-    '\u0634': 'SH',  # ARABIC LETTER SHEEN
-    '\u063a': 'GH',  # ARABIC LETTER GHAIN
-    '\u0641': 'F',   # ARABIC LETTER FEH
-    '\u06A9': 'K',   # ARABIC LETTER KEHEH
-    '\u0642': 'Q',   # ARABIC LETTER QAF
-    '\u06af': 'G',   # ARABIC LETTER GAF
-    '\u0644': 'L',   # ARABIC LETTER LAM
-    '\u0645': 'M',   # ARABIC LETTER MEEM
-    '\u0646': 'N',   # ARABIC LETTER NOON
-    '\u06ba': 'N',   # ARABIC LETTER NOON GHUNNA
-    '\u0648': 'O',   # ARABIC LETTER WAW
-    '\u0624': 'O',   # ARABIC LETTER WAW WITH HAMZA ABOVE
-    '\u06CC': 'Y',   # ARABIC LETTER FARSI YEH
-    '\u0621': 'Y',   # ARABIC LETTER HAMZA
-    '\u0626': 'Y',   # ARABIC LETTER YEH WITH HAMZA ABOVE
-    '\u064A': 'Y',   # ARABIC LETTER YEH
-    '\u06d2': 'E',   # ARABIC LETTER YEH BARREE
+    "\u0627": "A",  # ARABIC LETTER ALEF
+    "\u0639": "A",  # ARABIC LETTER AIN
+    "\u0622": "AA",  # ARABIC LETTER ALEF WITH MADDA ABOVE
+    "\u0623": "A",  # ARABIC LETTER ALEF WITH HAMZA ABOVE
+    "\u0628": "B",  # ARABIC LETTER BEH
+    "\u067e": "P",  # ARABIC LETTER PEH
+    "\u062a": "T",  # ARABIC LETTER TEH
+    "\u0637": "T",  # ARABIC LETTER TAH
+    "\u0679": "T",  # ARABIC LETTER TTEH
+    "\u06c3": "T",  # ARABIC LETTER TEH MARBUTA GOAL
+    "\u062c": "J",  # ARABIC LETTER JEEM
+    "\u062b": "S",  # ARABIC LETTER THEH
+    "\u0633": "S",  # ARABIC LETTER SEEN
+    "\u0635": "S",  # ARABIC LETTER SAD
+    "\u0686": "CH",  # ARABIC LETTER TCHEH
+    "\u062d": "H",  # ARABIC LETTER HAH
+    "\u06c1": "H",  # ARABIC LETTER HEH GOAL
+    "\u06c2": "H",  # ARABIC LETTER HEH GOAL WITH HAMZA ABOVE
+    "\u06be": "H",  # ARABIC LETTER HEH DOACHASHMEE
+    "\u0647": "H",  # ARABIC LETTER HEH
+    "\u062e": "KH",  # ARABIC LETTER KHAH
+    "\u062f": "D",  # ARABIC LETTER DAL
+    "\u0688": "D",  # ARABIC LETTER DDAL
+    "\u0630": "Z",  # ARABIC LETTER THAL
+    "\u0632": "Z",  # ARABIC LETTER ZAIN
+    "\u0636": "Z",  # ARABIC LETTER DAD
+    "\u0638": "Z",  # ARABIC LETTER ZAH
+    "\u0698": "Z",  # ARABIC LETTER JEH
+    "\u0631": "R",  # ARABIC LETTER REH
+    "\u0691": "R",  # ARABIC LETTER RREH
+    "\u0634": "SH",  # ARABIC LETTER SHEEN
+    "\u063a": "GH",  # ARABIC LETTER GHAIN
+    "\u0641": "F",  # ARABIC LETTER FEH
+    "\u06a9": "K",  # ARABIC LETTER KEHEH
+    "\u0642": "Q",  # ARABIC LETTER QAF
+    "\u06af": "G",  # ARABIC LETTER GAF
+    "\u0644": "L",  # ARABIC LETTER LAM
+    "\u0645": "M",  # ARABIC LETTER MEEM
+    "\u0646": "N",  # ARABIC LETTER NOON
+    "\u06ba": "N",  # ARABIC LETTER NOON GHUNNA
+    "\u0648": "O",  # ARABIC LETTER WAW
+    "\u0624": "O",  # ARABIC LETTER WAW WITH HAMZA ABOVE
+    "\u06cc": "Y",  # ARABIC LETTER FARSI YEH
+    "\u0621": "Y",  # ARABIC LETTER HAMZA
+    "\u0626": "Y",  # ARABIC LETTER YEH WITH HAMZA ABOVE
+    "\u064a": "Y",  # ARABIC LETTER YEH
+    "\u06d2": "E",  # ARABIC LETTER YEH BARREE
 }
 # URDU ARABIC2ROMAN ENCODING MAP END
 """This is one-to-one transliteration convertion map for converting Urdu text
@@ -70,7 +71,6 @@ from arabic-script to roman-script for word list lookup.
 
 .. todo:: Clean up the input characters to map only the normalized characters.
 """
-
 
 
 # ******************************************************************************
@@ -125,36 +125,38 @@ def tafseerUrduAr2Rm(word: str, keep: bool = True) -> tuple[str, int]:
     assert isinstance(word, str), f"Expected string type, got {type(word)}"
 
     # Normalize the input and split the input into individual tokens
-    tokens = normalize(word).split(' ')
+    tokens = normalize(word).split(" ")
 
     # If no tokens exist after normalization, return empty strings/counts
     if not tokens:
-        return '', 0
+        return "", 0
 
     romanizedTokens: list[str] = []
     undefCount: int = 0
 
     for token in tokens:
-        romanizedToken: str = ''
+        romanizedToken: str = ""
 
         # Handle the specific Urdu rule where initial 'Waw' (و) is treated as a consonant 'W'.
         # We strip it from the token and prepend 'W' to the result.
-        if token.startswith('\u0648'):
+        if token.startswith("\u0648"):
             token = token[1:]
-            romanizedToken = 'W'
+            romanizedToken = "W"
 
         for char in token:
             # Check if the character exists in our predefined mapping
             if char in URDU_ARABIC2ROMAN_ENCODING_MAP:
                 romanizedToken += URDU_ARABIC2ROMAN_ENCODING_MAP[char]
             else:
-                if keep: # If a character is not in the map, keep it as-is (pass-through)
+                if (
+                    keep
+                ):  # If a character is not in the map, keep it as-is (pass-through)
                     romanizedToken += char
                 undefCount += 1
 
         romanizedTokens.append(romanizedToken)
 
-    return ' '.join(romanizedTokens), undefCount
+    return " ".join(romanizedTokens), undefCount
 
 
 # ******************************************************************************
@@ -210,25 +212,25 @@ def tafseerUrduRm2Rm(word: str) -> set[str]:
 
     # Step 01 ------------------------------------------------------------------
     # print(f' 1. "{word}" -> ', end='')
-    token = "".join(char if char in 'aeiouyh' else char.upper() for char in word)
+    token = "".join(char if char in "aeiouyh" else char.upper() for char in word)
     # print(f'"{token}"')
 
     # Step 02 ------------------------------------------------------------------
     # print(f' 2. "{token}" -> ', end='')
-    token = re.sub(r'([A-Z])\1+', r'\1', token)
+    token = re.sub(r"([A-Z])\1+", r"\1", token)
     # print(f'"{token}"')
 
     # Step 03 ------------------------------------------------------------------
     # print(f' 3. "{token}" -> ', end='')
-    token = ('A' if token[0] in 'aeiou' else '') + token
+    token = ("A" if token[0] in "aeiou" else "") + token
     # print(f'"{token}"')
 
     # Step 04 ------------------------------------------------------------------
     hVowelCombos = {
-        'ehe': ['eHe', 'H'],
-        'eh': ['eH', 'H'],
-        'oh': ['oH', 'H'],
-        'h': ['H'],
+        "ehe": ["eHe", "H"],
+        "eh": ["eH", "H"],
+        "oh": ["oH", "H"],
+        "h": ["H"],
     }
     # print(f' 4. "{token}" -> ', end='')
     tokenList = permuteAllOccurrences([token], hVowelCombos)
@@ -236,8 +238,8 @@ def tafseerUrduRm2Rm(word: str) -> set[str]:
 
     # Step 05 ------------------------------------------------------------------
     yehEndings = {
-        'ey': 'Y',
-        'ay': "E",
+        "ey": "Y",
+        "ay": "E",
     }
     # print(f' 5. {tokenList} -> ', end='')
     tokenList = [replaceEnding(token, yehEndings, 2) for token in tokenList]
@@ -245,8 +247,8 @@ def tafseerUrduRm2Rm(word: str) -> set[str]:
 
     # Step 06 ------------------------------------------------------------------
     yVowelCombos = {
-        'ey': ['Y', 'eY'],
-        'ay': ['Y', 'aY'],
+        "ey": ["Y", "eY"],
+        "ay": ["Y", "aY"],
     }
     # print(f' 6. {tokenList} -> ', end='')
     tokenList = permuteAllOccurrences(tokenList, yVowelCombos)
@@ -254,13 +256,13 @@ def tafseerUrduRm2Rm(word: str) -> set[str]:
 
     # Step 07 ------------------------------------------------------------------
     # print(f' 7. {tokenList} -> ', end='')
-    tokenList = [w.replace('y', 'Y') for w in tokenList]
+    tokenList = [w.replace("y", "Y") for w in tokenList]
     # print(f'{tokenList}')
 
     # Step 08 ------------------------------------------------------------------
     iEndings = {
-        'ai': ['E', 'aYi', 'aAi'],
-        'ei': ['E', 'eYi', 'eAi'],
+        "ai": ["E", "aYi", "aAi"],
+        "ei": ["E", "eYi", "eAi"],
     }
     # print(f' 8. {tokenList} -> ', end='')
     tokenList = permuteAllEndings(tokenList, iEndings)
@@ -273,37 +275,32 @@ def tafseerUrduRm2Rm(word: str) -> set[str]:
 
     # Step 10 ------------------------------------------------------------------
     DoubleVowels = {
-        'aa': ['A'],
-        'ai': ['Y'],
-        'ei': ['Y'],
-        'ee': ['Y'],
-        'ie': ['Y'],
-        'oo': ['O'],
-        'au': ['O'],
-        'ou': ['O'],
+        "aa": ["A"],
+        "ai": ["Y"],
+        "ei": ["Y"],
+        "ee": ["Y"],
+        "ie": ["Y"],
+        "oo": ["O"],
+        "au": ["O"],
+        "ou": ["O"],
     }
     # print(f'10. {tokenList} -> ', end='')
     tokenList = permuteAllOccurrences(tokenList, DoubleVowels)
     # print(f'{tokenList}')
 
     # Step 11 ------------------------------------------------------------------
-    VowelEndings = {
-        'e': ['E'],
-        'a': ['A', 'H'],
-        'i': ['Y'],
-        'u': ['O']
-    }
+    VowelEndings = {"e": ["E"], "a": ["A", "H"], "i": ["Y"], "u": ["O"]}
     # print(f'11. {tokenList} -> ', end='')
     tokenList = permuteAllEndings(tokenList, VowelEndings)
     # print(f'{tokenList}')
 
     # Step 12 ------------------------------------------------------------------
     VowelReplacements = {
-        'a': ['', 'A'],
-        'i': ['', 'Y'],
-        'u': ['', 'O'],
-        'e': ['E'],
-        'o': ['O'],
+        "a": ["", "A"],
+        "i": ["", "Y"],
+        "u": ["", "O"],
+        "e": ["E"],
+        "o": ["O"],
     }
     # print(f'12. {tokenList} -> ', end='')
     tokenList = permuteAllOccurrences(tokenList, VowelReplacements)
@@ -354,14 +351,18 @@ def permuteFirstOccurrence(token: str, mapping: dict[str, list[str]]) -> list[st
         substitutions = mapping[leftMostKey]
 
         # The '1' argument ensures only the first occurrence is swapped
-        return [token.replace(leftMostKey, replacement, 1) for replacement in substitutions]
+        return [
+            token.replace(leftMostKey, replacement, 1) for replacement in substitutions
+        ]
 
     # Return an empty list if no operational keys were matched
     return []
 
 
 # ******************************************************************************
-def permuteAllOccurrences(tokenList: list[str], mapping: dict[str, list[str]]) -> list[str]:
+def permuteAllOccurrences(
+    tokenList: list[str], mapping: dict[str, list[str]]
+) -> list[str]:
     """Exhaustively generates all phonetic permutations for a list of tokens.
 
     This function processes each string in the input list, running an iterative
@@ -438,7 +439,7 @@ def permuteEnding(token: str, mapping: dict[str, list[str]]) -> list[str]:
     for key, substitutions in mapping.items():
         if token.endswith(key):
             # Isolate the front part of the string by slicing off the suffix length
-            prefix = token[:-len(key)]
+            prefix = token[: -len(key)]
 
             # Reconstruct the token variations by attaching the new suffix options
             return [prefix + sub for sub in substitutions]
@@ -554,11 +555,21 @@ def findVowelCombos(token: str) -> list[list[str]]:
         [['a', 'a'], ['aa']]
     """
     vowelPatterns = [
-        "a", "aa", "ai", "au", "ay",
-        "e", "ee", "ei", "ey",
-        "i", "ie",
-        "o", "oo", "ou",
-        "u"
+        "a",
+        "aa",
+        "ai",
+        "au",
+        "ay",
+        "e",
+        "ee",
+        "ei",
+        "ey",
+        "i",
+        "ie",
+        "o",
+        "oo",
+        "ou",
+        "u",
     ]
     # Convert list to set for O(1) average lookup performance
     vowelsSet = set(vowelPatterns)
@@ -592,7 +603,9 @@ def findVowelCombos(token: str) -> list[list[str]]:
 
 
 # ******************************************************************************
-def concatenateCombos(subStrings: list[str], charset: set[str] | list[str]) -> list[str]:
+def concatenateCombos(
+    subStrings: list[str], charset: set[str] | list[str]
+) -> list[str]:
     """Concatenates strings using all combinations of characters from a charset.
 
     This function pieces together an array of fragmented sub-strings by interleaving
