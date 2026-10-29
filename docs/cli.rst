@@ -5,10 +5,12 @@
    *****************************************************************************
 
 ********************************************************************************
-Vocabulary File CLI
+Vocabulary CLI
 ********************************************************************************
 The ``romanalfaz`` command inspects and rewrites SymSpell vocabulary files.
-A vocabulary file stores one ``word$frequency`` entry per line.
+A vocabulary file stores one ``word$frequency`` entry per line. Blank lines are
+reported as issues rather than silently skipped: the file is expected to
+contain only entries.
 
 Every file command applies a normalization method, ``urdu-spell`` by default,
 so that comparisons and rewrites are made between canonical forms of words
@@ -19,8 +21,8 @@ Command Overview
 ================================================================================
 
 ``validate FILE``
-   Reports malformed lines, non-canonical spellings, words that normalize to
-   empty or cannot be romanized, and duplicate canonical forms.
+   Reports blank and malformed lines, non-canonical spellings, words that
+   normalize to empty or cannot be romanized, and duplicate canonical forms.
 
 ``normalize FILE``
    Rewrites the file in canonical form, summing the frequencies of entries that

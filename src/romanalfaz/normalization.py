@@ -17,6 +17,7 @@ does.
 Adding a method means writing its module and adding one entry to
 :data:`romanalfaz.normalization.NORMALIZATION_METHODS`.
 """
+
 from collections.abc import Callable
 from typing import NamedTuple
 
@@ -34,11 +35,12 @@ class NormalizationMethod(NamedTuple):
     stages: tuple[str, ...]
     """(tuple[str, ...]): The pipeline stages the method applies, in order, as
     short human-readable phrases."""
-    function: Callable[[str], str]
-    """(Callable[[str], str]): The normalization function, mapping an input
-    string to its canonical form."""
+    normalize: Callable[[str], str]
+    """(Callable[[str], str]): The function called to normalize the input
+    string into its canonical form."""
 
 
+# ******************************************************************************
 NORMALIZATION_METHODS: dict[str, NormalizationMethod] = {
     "urdu-spell": NormalizationMethod(
         name="urdu-spell",
@@ -56,10 +58,13 @@ NORMALIZATION_METHODS: dict[str, NormalizationMethod] = {
             "remove digits, punctuation, symbols, and control characters",
             "collapse whitespace runs to single spaces",
         ),
-        function=urduspell.normalize,
+        normalize=urduspell.normalize,
     ),
 }
 """
 The normalization methods available in the package, keyed by their public
 label. The insertion order is the order presented by the CLI.
 """
+
+
+# ******************************************************************************

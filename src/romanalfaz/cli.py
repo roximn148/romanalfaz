@@ -26,6 +26,7 @@ Commands never write in place unless asked to: the target of a rewrite is an
 output path, and ``normalize`` accepts ``--in-place`` or ``--preview`` as
 explicit alternatives.
 """
+
 import argparse
 import sys
 from pathlib import Path
@@ -34,7 +35,8 @@ from typing import NamedTuple
 from .algorithm import tafseerUrduAr2Rm
 from .normalization import NORMALIZATION_METHODS, NormalizationMethod
 
-SEP = "$"
+SEPARATOR = "$"
+
 
 # ******************************************************************************
 class SymEntry(NamedTuple):
@@ -48,6 +50,7 @@ class SymEntry(NamedTuple):
     """(int): The entry's frequency, always positive."""
 
 
+# ******************************************************************************
 class Issue(NamedTuple):
     """A problem found in a vocabulary file."""
 
@@ -60,17 +63,18 @@ class Issue(NamedTuple):
 # ******************************************************************************
 #                                  PARSING
 # ******************************************************************************
-def parseSymFile(path: Path) -> tuple[list[SymEntry], list[Issue]]:
+def parseSymFile(symPath: Path) -> tuple[list[SymEntry], list[Issue]]:
     """
     Parses a SymSpell vocabulary file.
 
-    Every non-blank line is stripped and split at its last ``$``: the part
-    before it is the word and the part after it is the frequency. Blank lines
-    are ignored. A malformed line is recorded as an :py:class:`Issue` and
-    skipped, so one bad line never hides the rest of the file.
+    Blank lines are reported as issues rather than skipped. Every other line
+    is stripped and split at its last ``$``: the part before it is the word and
+    the part after it is the frequency. A malformed line is recorded as an
+    :py:class:`Issue` and skipped, so one bad line never hides the rest of the
+    file.
 
     Args:
-        path (Path): The vocabulary file to read.
+        symPath (Path): The vocabulary file to read.
 
     Returns:
         tuple[list[SymEntry], list[Issue]]: The parsed entries and the
@@ -86,19 +90,20 @@ def parseSymFile(path: Path) -> tuple[list[SymEntry], list[Issue]]:
         >>> [(entry.word, entry.frequency) for entry in entries]
         [('کتاب', 4643)]
     """
-    text = path.read_text(encoding="utf-8")
+    text = symPath.read_text(encoding="utf-8")
     entries: list[SymEntry] = []
     issues: list[Issue] = []
 
     for lineno, rawLine in enumerate(text.splitlines(), start=1):
         line = rawLine.strip()
         if not line:
+            issues.append(Issue(lineno, "blank line (expected word$frequency)"))
             continue
-        if SEP not in line:
+        if SEPARATOR not in line:
             issues.append(Issue(lineno, "missing separator (expected word$frequency)"))
             continue
 
-        word, _, frequencyText = line.rpartition(SEP)
+        word, _, frequencyText = line.rpartition(SEPARATOR)
         if not word:
             issues.append(Issue(lineno, "empty word before separator"))
             continue
@@ -106,7 +111,9 @@ def parseSymFile(path: Path) -> tuple[list[SymEntry], list[Issue]]:
         try:
             frequency = int(frequencyText)
         except ValueError:
-            issues.append(Issue(lineno, f"frequency is not an integer: {frequencyText!r}"))
+            issues.append(
+                Issue(lineno, f"frequency is not an integer: {frequencyText!r}")
+            )
             continue
 
         if frequency < 1:
@@ -143,20 +150,26 @@ def findIssues(entries: list[SymEntry], method: NormalizationMethod) -> list[Iss
     firstSeen: dict[str, int] = {}
 
     for entry in entries:
-        canonical = method.function(entry.word)
+        canonical = method.normalize(entry.word)
         if not canonical:
             issues.append(Issue(entry.lineno, "word normalizes to empty"))
             continue
 
         if canonical != entry.word:
             issues.append(
-                Issue(entry.lineno, f"word is not canonical: {entry.word!r} -> {canonical!r}")
+                Issue(
+                    entry.lineno,
+                    f"word is not canonical: {entry.word!r} -> {canonical!r}",
+                )
             )
 
         _, undefined = tafseerUrduAr2Rm(entry.word, keep=False)
         if undefined:
             issues.append(
-                Issue(entry.lineno, f"word has {undefined} unmapped character(s) for romanization")
+                Issue(
+                    entry.lineno,
+                    f"word has {undefined} unmapped character(s) for romanization",
+                )
             )
 
         if canonical in firstSeen:
@@ -173,9 +186,15 @@ def findIssues(entries: list[SymEntry], method: NormalizationMethod) -> list[Iss
     return issues
 
 
+# ******************************************************************************
 def canonicalize(
     entries: list[SymEntry], method: NormalizationMethod
-) -> tuple[list[SymEntry], list[tuple[int, str, str]], list[tuple[int, str, str, int]], list[SymEntry]]:
+) -> tuple[
+    list[SymEntry],
+    list[tuple[int, str, str]],
+    list[tuple[int, str, str, int]],
+    list[SymEntry],
+]:
     """
     Rewrites entries in the canonical form of the chosen method.
 
@@ -210,7 +229,7 @@ def canonicalize(
     dropped: list[SymEntry] = []
 
     for entry in entries:
-        canonical = method.function(entry.word)
+        canonical = method.normalize(entry.word)
         if not canonical:
             dropped.append(entry)
             continue
@@ -231,6 +250,7 @@ def canonicalize(
     return normalized, changed, merged, dropped
 
 
+# ******************************************************************************
 def mergeEntries(
     first: list[SymEntry], second: list[SymEntry], method: NormalizationMethod
 ) -> list[SymEntry]:
@@ -271,6 +291,7 @@ def mergeEntries(
     return result
 
 
+# ******************************************************************************
 def subtractEntries(
     first: list[SymEntry], second: list[SymEntry], method: NormalizationMethod
 ) -> list[SymEntry]:
@@ -319,10 +340,13 @@ def writeSymFile(path: Path, entries: list[SymEntry]) -> None:
     Example:
         >>> writeSymFile(Path("out.sym"), entries)
     """
-    content = "".join(f"{entry.word}{SEP}{entry.frequency}\n" for entry in entries)
+    content = "".join(
+        f"{entry.word}{SEPARATOR}{entry.frequency}\n" for entry in entries
+    )
     path.write_text(content, encoding="utf-8", newline="\n")
 
 
+# ******************************************************************************
 def writeLines(path: Path, lines: list[str]) -> None:
     """
     Writes lines as a UTF-8 text file with LF line endings.
@@ -337,7 +361,9 @@ def writeLines(path: Path, lines: list[str]) -> None:
     Example:
         >>> writeLines(Path("words.txt"), ["ب"])
     """
-    path.write_text("".join(f"{line}\n" for line in lines), encoding="utf-8", newline="\n")
+    path.write_text(
+        "".join(f"{line}\n" for line in lines), encoding="utf-8", newline="\n"
+    )
 
 
 # ******************************************************************************
@@ -368,6 +394,7 @@ def commandValidate(args: argparse.Namespace) -> int:
     return 1
 
 
+# ******************************************************************************
 def commandNormalize(args: argparse.Namespace) -> int:
     """
     Rewrites a vocabulary file in canonical form, or previews the rewrite.
@@ -394,6 +421,7 @@ def commandNormalize(args: argparse.Namespace) -> int:
     return 0
 
 
+# ******************************************************************************
 def commandWords(args: argparse.Namespace) -> int:
     """
     Exports the canonical words of a vocabulary file, sorted, without
@@ -409,7 +437,7 @@ def commandWords(args: argparse.Namespace) -> int:
     entries, issues = parseSymFile(args.input)
     _reportParseIssues(issues)
 
-    words = sorted({method.function(entry.word) for entry in entries} - {""})
+    words = sorted({method.normalize(entry.word) for entry in entries} - {""})
 
     if args.output is None:
         sys.stdout.write("".join(f"{word}\n" for word in words))
@@ -418,6 +446,7 @@ def commandWords(args: argparse.Namespace) -> int:
     return 0
 
 
+# ******************************************************************************
 def commandMerge(args: argparse.Namespace) -> int:
     """
     Unions two vocabulary files by canonical word.
@@ -438,6 +467,7 @@ def commandMerge(args: argparse.Namespace) -> int:
     return 0
 
 
+# ******************************************************************************
 def commandSubtract(args: argparse.Namespace) -> int:
     """
     Removes the words of a second vocabulary file from a first one.
@@ -458,6 +488,7 @@ def commandSubtract(args: argparse.Namespace) -> int:
     return 0
 
 
+# ******************************************************************************
 def commandList(args: argparse.Namespace) -> int:
     """
     Describes every normalization method, its scope, and its pipeline.
@@ -477,12 +508,14 @@ def commandList(args: argparse.Namespace) -> int:
     return 0
 
 
+# ******************************************************************************
 def _reportParseIssues(issues: list[Issue]) -> None:
     """Reports malformed lines on stderr without stopping the command."""
     for issue in issues:
         print(f"warning: line {issue.lineno}: {issue.message}", file=sys.stderr)
 
 
+# ******************************************************************************
 def _printPreview(
     source: list[SymEntry],
     normalized: list[SymEntry],
@@ -497,7 +530,9 @@ def _printPreview(
         if word == canonical:
             print(f"line {lineno}: merged {word!r} (frequency {total})")
         else:
-            print(f"line {lineno}: merged {word!r} into {canonical!r} (frequency {total})")
+            print(
+                f"line {lineno}: merged {word!r} into {canonical!r} (frequency {total})"
+            )
     for entry in dropped:
         print(f"line {entry.lineno}: dropped {entry.word!r} (normalizes to empty)")
 
@@ -520,6 +555,7 @@ def _addMethodArgument(parser: argparse.ArgumentParser) -> None:
     )
 
 
+# ******************************************************************************
 def buildParser() -> argparse.ArgumentParser:
     """
     Builds the command line parser.
@@ -537,7 +573,9 @@ def buildParser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    validate = subparsers.add_parser("validate", help="check a vocabulary file for issues")
+    validate = subparsers.add_parser(
+        "validate", help="check a vocabulary file for issues"
+    )
     validate.add_argument("input", type=Path, help="vocabulary file to check")
     _addMethodArgument(validate)
 
@@ -546,9 +584,15 @@ def buildParser() -> argparse.ArgumentParser:
     )
     normalize.add_argument("input", type=Path, help="vocabulary file to normalize")
     target = normalize.add_mutually_exclusive_group()
-    target.add_argument("-o", "--output", type=Path, help="write the result to this file")
-    target.add_argument("--in-place", action="store_true", help="rewrite the input file itself")
-    target.add_argument("--preview", action="store_true", help="report changes without writing")
+    target.add_argument(
+        "-o", "--output", type=Path, help="write the result to this file"
+    )
+    target.add_argument(
+        "--in-place", action="store_true", help="rewrite the input file itself"
+    )
+    target.add_argument(
+        "--preview", action="store_true", help="report changes without writing"
+    )
     _addMethodArgument(normalize)
 
     words = subparsers.add_parser("words", help="export the canonical words, sorted")
@@ -556,16 +600,24 @@ def buildParser() -> argparse.ArgumentParser:
     words.add_argument("-o", "--output", type=Path, help="write the words to this file")
     _addMethodArgument(words)
 
-    merge = subparsers.add_parser("merge", help="union two files, summing shared frequencies")
+    merge = subparsers.add_parser(
+        "merge", help="union two files, summing shared frequencies"
+    )
     merge.add_argument("first", type=Path, help="file whose order is preserved first")
     merge.add_argument("second", type=Path, help="file whose new words are appended")
-    merge.add_argument("-o", "--output", type=Path, required=True, help="write the result here")
+    merge.add_argument(
+        "-o", "--output", type=Path, required=True, help="write the result here"
+    )
     _addMethodArgument(merge)
 
-    subtract = subparsers.add_parser("subtract", help="remove the words of a second file")
+    subtract = subparsers.add_parser(
+        "subtract", help="remove the words of a second file"
+    )
     subtract.add_argument("first", type=Path, help="file to keep words from")
     subtract.add_argument("second", type=Path, help="file whose words are removed")
-    subtract.add_argument("-o", "--output", type=Path, required=True, help="write the result here")
+    subtract.add_argument(
+        "-o", "--output", type=Path, required=True, help="write the result here"
+    )
     _addMethodArgument(subtract)
 
     subparsers.add_parser("list", help="describe the available normalization methods")
@@ -573,6 +625,7 @@ def buildParser() -> argparse.ArgumentParser:
     return parser
 
 
+# ******************************************************************************
 _HANDLERS = {
     "validate": commandValidate,
     "normalize": commandNormalize,
@@ -586,7 +639,7 @@ _HANDLERS = {
 # ******************************************************************************
 #                                    MAIN
 # ******************************************************************************
-def _configureStdio() -> None:
+def _configureIoEncoding() -> None:
     """
     Makes the CLI write UTF-8 to standard output and standard error.
 
@@ -605,6 +658,7 @@ def _configureStdio() -> None:
         reconfigure(encoding="utf-8")
 
 
+# ******************************************************************************
 def main(argv: list[str] | None = None) -> int:
     """
     Runs the command line interface.
@@ -621,11 +675,13 @@ def main(argv: list[str] | None = None) -> int:
         >>> main(["list"])  # doctest: +SKIP
         0
     """
-    _configureStdio()
+    _configureIoEncoding()
     parser = buildParser()
     args = parser.parse_args(argv)
 
-    if args.command == "normalize" and not (args.output or args.in_place or args.preview):
+    if args.command == "normalize" and not (
+        args.output or args.in_place or args.preview
+    ):
         parser.error("normalize requires one of -o/--output, --in-place, or --preview")
 
     try:
@@ -635,5 +691,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
+# ******************************************************************************
 if __name__ == "__main__":
     sys.exit(main())
+
+
+# ******************************************************************************

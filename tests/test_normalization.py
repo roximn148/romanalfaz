@@ -12,7 +12,7 @@ class TestRegistry:
         method = NORMALIZATION_METHODS["urdu-spell"]
         assert isinstance(method, NormalizationMethod)
         assert method.name == "urdu-spell"
-        assert method.function is urduspell.normalize
+        assert method.normalize is urduspell.normalize
 
     def testMethodDescribesScopeAndStages(self):
         """Each entry states its scope and its ordered pipeline stages."""
