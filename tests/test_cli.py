@@ -29,12 +29,19 @@ class SymFileFixture:
 class TestParseSymFile(SymFileFixture):
     def testReadsEntriesAndLineNumbers(self, symFile):
         """Parses word$frequency lines and records their 1-based line numbers."""
-        entries, issues = parseSymFile(symFile("\u0628$3\n\n\u062a$7\n"))
+        entries, issues = parseSymFile(symFile("\u0628$3\n\u062a$7\n"))
         assert [(e.word, e.frequency, e.lineno) for e in entries] == [
             ("\u0628", 3, 1),
-            ("\u062a", 7, 3),
+            ("\u062a", 7, 2),
         ]
         assert issues == []
+
+    def testReportsBlankLines(self, symFile):
+        """Blank lines are reported rather than silently skipped."""
+        entries, issues = parseSymFile(symFile("\u0628$3\n\n\u062a$7\n"))
+        assert [(e.word, e.lineno) for e in entries] == [("\u0628", 1), ("\u062a", 3)]
+        assert [issue.lineno for issue in issues] == [2]
+        assert "blank" in issues[0].message
 
     def testStripsSurroundingWhitespace(self, symFile):
         """Leading and trailing whitespace on a line is ignored."""
@@ -99,6 +106,12 @@ class TestValidateCommand(SymFileFixture):
         """Malformed lines are part of the validation report."""
         assert main(["validate", str(symFile("\u0628\n"))]) == 1
         assert "separator" in capsys.readouterr().out
+
+    def testReportsBlankLines(self, symFile, capsys):
+        """Blank lines make a file invalid instead of being skipped."""
+        assert main(["validate", str(symFile("\u0628$3\n\n\u062a$7\n"))]) == 1
+        out = capsys.readouterr().out
+        assert "line 2" in out and "blank" in out
 
     def testMissingFileExitsOne(self, tmp_path, capsys):
         """A missing input file produces a clean error, not a traceback."""

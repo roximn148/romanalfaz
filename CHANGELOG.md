@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 ### Added
 - Vocabulary file CLI: the `romanalfaz` command and `python -m romanalfaz`
   expose `validate`, `normalize`, `words`, `merge`, `subtract`, and `list`
-  for SymSpell `word$frequency` files, built on the standard library only
+  for SymSpell `word$frequency` files, built on the standard library only;
+  blank lines are reported as issues rather than silently skipped
 - Normalization method registry (`romanalfaz.normalization`): each method is
   a separate module registered with its label, scope, and pipeline stages;
   `--normalize` selects a method and `list` describes the available ones
