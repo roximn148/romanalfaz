@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+## [0.1.0a7] - 2026-10-29
+
 ### Added
 - Vocabulary file CLI: the `romanalfaz` command and `python -m romanalfaz`
   expose `validate`, `normalize`, `words`, `merge`, `subtract`, and `list`
