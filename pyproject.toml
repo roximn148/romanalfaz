@@ -1,6 +1,6 @@
 [project]
 name = "romanalfaz"
-version = "0.1.0a6"
+version = "0.1.0a7"
 description = "Dictionary based predictive Roman Urdu transliterator"
 
 readme = "README.md"
