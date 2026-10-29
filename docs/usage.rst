@@ -16,9 +16,34 @@ Tafseer Encoding
 Romanized Urdu features massive phonetic variation (e.g., "khair", "kher", "khayr").
 The engine normalizes these spelling gaps into a strict structural intermediate
 format before querying the dictionary. This drastically improves match accuracy.
-The details of the :ref:`algorithm<TafseerAlgorithmDetailsSection>` and its
-:ref:`implementation<AlgorithmImplementationSection>` can be seen in the relevant
+The details of the :ref:`algorithm<TafseerAlgorithm>` and its
+:ref:`implementation<TafseerImplementation>` can be seen in the relevant
 sections.
+
+Normalization
+-------------
+Normalization standardizes input text into one canonical form. Language text 
+across different sources can use different Unicode variants for the same word; different character
+sequences but representing a single word. For `romanalfaz`, Normalization strips
+these surface differences (markers, positional shapes, etc) leaving only
+the core linguistic sequence that conveys meaning, which is used for comparing
+input against the dictionary.
+
+.. list-table:: Example: "Canonical" form after removing marks.
+   :header-rows: 1
+   :widths: 70 30
+
+   * - Input
+     - Normalized
+
+   * - * ``کتابْ``
+       * ``کِتاب``
+       * ``کتَاب``
+       * ``کتَابْ``
+       * ``کِتابْ``
+       * ``کِتَاب``
+       * ``کِتَابْ``
+     - ``کتاب``
 
 SymSpellPy Backend
 ------------------

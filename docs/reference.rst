@@ -10,7 +10,8 @@ Reference
 .. toctree::
    :maxdepth: 1
 
-   algorithm
+   tafseerimpl
    engine
    normalization
    urduspell
+   cli
