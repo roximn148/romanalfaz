@@ -5,12 +5,11 @@
    *****************************************************************************
 
 ********************************************************************************
-Normalization
+Urdu-Spell Normalization
 ********************************************************************************
 
 Purpose (Why)
 ===============
-
 Normalization establishes one standard way to represent Unicode text for
 processing. It reduces character variations from different sources to a single
 canonical form.

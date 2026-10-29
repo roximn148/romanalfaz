@@ -64,7 +64,7 @@ Core Workflow
    installation
    quickstart
    usage
-   cli
+   tafseeralgo
    reference
 
 
