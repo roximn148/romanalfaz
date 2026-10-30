@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+### Added
+- `Vocabulary.isModified()`: reports whether the word list has changed
+  since construction or the last `save`/`load`
+- `isCompleted` argument to `Vocabulary.add`: when True, the word is marked
+  as completed in the same mutation, so a completed word needs only a
+  single call and a single change notification
+
+### Changed
+- `Vocabulary` now tracks modification state with a private `_dirty` flag,
+  committed in the new private `_notifyChanges` (renamed from the public
+  `notifyChanges`), the single convergence point of all mutations, and
+  cleared by `save` and `load` once the word list matches the file on disk.
+  The privatization keeps a public caller from flipping the flag without
+  an actual state change
+- `Vocabulary.replace` now introduces the replacement word through a
+  single `add(..., isCompleted=...)` mutation, firing exactly one change
+  notification per replacement (previously two)
+- `Vocabulary.setCompleted` no longer notifies on no-op toggles (the word
+  already holding the requested status), so attached `RomanAlfaz`
+  instances no longer recompile needlessly
+- `Vocabulary.load` now introduces each saved word through a single
+  `add(..., isCompleted=True)` mutation
+
 ## [0.1.0a7] - 2026-10-29
 
 ### Added
