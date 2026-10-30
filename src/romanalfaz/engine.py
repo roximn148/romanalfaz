@@ -56,15 +56,22 @@ class Vocabulary:
         self.counter = Counter(data) if data else Counter()
         self.completed = set()
         self.onChangeCallbacks: list[Callable[[], None]] = []
+        # Tracks whether the word list has changed since the last save/load.
+        self._dirty = False
 
     # --------------------------------------------------------------------------
-    def notifyChanges(self):
-        """Triggers attached callbacks when internal state changes."""
+    def _notifyChanges(self):
+        """Marks the vocabulary modified and triggers the attached callbacks.
+
+        Every actual mutation funnels through this single convergence point,
+        so the ``_dirty`` flag is committed here, before any callback runs.
+        """
+        self._dirty = True
         for callback in self.onChangeCallbacks:
             callback()
 
     # --------------------------------------------------------------------------
-    def add(self, word: str, count: int = 1):
+    def add(self, word: str, count: int = 1, isCompleted: bool = False):
         """Accumulate the count for a specific word.
 
         If the word exists, its current count increases by `count`.
@@ -73,21 +80,28 @@ class Vocabulary:
         Args:
             word (str): The word to add or update.
             count (int): Number of times to increment the word's frequency. Defaults to 1.
+            isCompleted (bool): When True, the word is also marked as completed
+                in the same mutation, so a completed word needs only this
+                single call and a single change notification. Defaults to
+                False, in which case the completion status is left untouched.
 
         Raises:
             AssertionError: If `word` is not a string, is empty, or normalizes
                 to empty (e.g., a tatweel-only or diacritic-only string), since
-                such a word cannot represent a word; or if `count` is not a
-                positive integer.
+                such a word cannot represent a word; if `count` is not a
+                positive integer; or if `isCompleted` is not a boolean.
         """
         assert isinstance(word, str)
         assert len(word) > 0
         assert isinstance(count, int)
         assert count >= 1
+        assert isinstance(isCompleted, bool)
         assert len(normalize(word)) > 0, "word must normalize to a non-empty word"
 
         self.counter[word] += count
-        self.notifyChanges()
+        if isCompleted:
+            self.completed.add(word)
+        self._notifyChanges()
 
     # --------------------------------------------------------------------------
     def remove(self, word: str):
@@ -107,7 +121,7 @@ class Vocabulary:
             changed = True
 
         if changed:
-            self.notifyChanges()
+            self._notifyChanges()
 
     # --------------------------------------------------------------------------
     def replace(self, oldWord: str, newWord: str):
@@ -126,19 +140,22 @@ class Vocabulary:
             # Retrieve the frequency of the old word before removal
             oldFreq = self.counter.pop(oldWord)
 
-            # Add the same frequency to the new word
-            self.add(newWord, oldFreq)
+            # Capture the completion status before removal so it can be
+            # re-applied through add's isCompleted argument
+            wasCompleted = oldWord in self.completed
+            self.completed.discard(oldWord)
 
-            # Update completion status accordingly
-            if oldWord in self.completed:
-                self.completed.remove(oldWord)
-                self.completed.add(newWord)
-
-            self.notifyChanges()
+            # Add the same frequency to the new word in a single mutation
+            # carrying its completion status, firing exactly one notification
+            self.add(newWord, oldFreq, isCompleted=wasCompleted)
 
     # --------------------------------------------------------------------------
     def setCompleted(self, word: str, isCompleted: bool):
         """Toggle a word's completion status.
+
+        A no-op toggle (the word already holds the requested status) is a
+        non-mutation: it neither marks the vocabulary modified nor fires
+        change notifications.
 
         Args:
             word (str): The word to update.
@@ -146,14 +163,21 @@ class Vocabulary:
         """
         assert isinstance(word, str)
         assert len(word) > 0
+        assert isinstance(isCompleted, bool)
 
+        changed = False
         if isCompleted:
-            self.completed.add(word)
+            if word not in self.completed:
+                self.completed.add(word)
+                changed = True
         else:
             # discard() prevents KeyError if the word wasn't in the set
-            self.completed.discard(word)
+            if word in self.completed:
+                self.completed.discard(word)
+                changed = True
 
-        self.notifyChanges()
+        if changed:
+            self._notifyChanges()
 
     # --------------------------------------------------------------------------
     def save(self, filename: str, sep: str = "$"):
@@ -176,6 +200,9 @@ class Vocabulary:
             for i, (w, f) in enumerate(self.counter.most_common()):
                 if w in self.completed:
                     sym.write(f"{w}{sep}{f}\n")
+
+        # The in-memory word list now matches the persisted file
+        self._dirty = False
 
     # --------------------------------------------------------------------------
     @classmethod
@@ -204,9 +231,32 @@ class Vocabulary:
                     parts = line.rsplit(sep, 1)
                     if len(parts) == 2:
                         word, freq = parts
-                        newVocab.add(word, int(freq))
-                        newVocab.setCompleted(word, True)
+                        # Every saved word is completed by definition, so it
+                        # enters in a single mutation carrying its status
+                        newVocab.add(word, int(freq), isCompleted=True)
+        # The loaded word list matches its source file
+        newVocab._dirty = False
         return newVocab
+
+    # --------------------------------------------------------------------------
+    def isModified(self) -> bool:
+        """Reports whether the word list has changed since the last save/load.
+
+        Returns:
+            bool: ``True`` if any mutation has occurred since the vocabulary
+            was constructed, or since :py:meth:`save` or :py:meth:`load`
+            last marked it unmodified, ``False`` otherwise.
+
+        Example:
+            >>> from romanalfaz.engine import Vocabulary
+            >>> v = Vocabulary()
+            >>> v.isModified()
+            False
+            >>> v.add("کتاب")
+            >>> v.isModified()
+            True
+        """
+        return self._dirty
 
 
 # ******************************************************************************

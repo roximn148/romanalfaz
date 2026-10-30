@@ -186,6 +186,120 @@ class TestVocabulary:
         assert loadedV.counter["نام$غلط"] == 4
         assert "نام$غلط" in loadedV.completed
 
+    def testIsModifiedInitialStates(self):
+        """A freshly built vocabulary reports unmodified, with or without initial data."""
+        assert Vocabulary().isModified() is False
+        assert Vocabulary({"کتاب": 5}).isModified() is False
+
+    def testAddMarksModified(self):
+        """Adding a word marks the vocabulary as modified."""
+        v = Vocabulary()
+        v.add("python")
+        assert v.isModified() is True
+
+    def testRemoveMarksModifiedOnlyWhenWordPresent(self):
+        """Removing a present word marks modified; removing an absent word does not."""
+        v = Vocabulary({"لفظ": 2})
+        v.remove("missing_ورڈ")
+        assert v.isModified() is False
+        v.remove("لفظ")
+        assert v.isModified() is True
+
+    def testReplaceMarksModifiedOnlyWhenReplacementOccurs(self):
+        """Replacing a present word marks modified; replacing an absent word does not."""
+        v = Vocabulary({"غلطی": 10})
+        v.replace("absent_ورڈ", "درست")
+        assert v.isModified() is False
+        v.replace("غلطی", "درست")
+        assert v.isModified() is True
+
+    def testSetCompletedNoOpLeavesVocabularyUnmodified(self):
+        """A no-op completion toggle neither marks modified nor fires callbacks."""
+        v = Vocabulary({"ٹیسٹ": 1})
+        calls = []
+        v.onChangeCallbacks.append(lambda: calls.append(1))
+
+        v.setCompleted("ٹیسٹ", False)  # No-op: not yet completed, un-completing
+        assert v.isModified() is False
+        assert len(calls) == 0
+
+        v.setCompleted("ٹیسٹ", True)
+        assert v.isModified() is True
+        assert len(calls) == 1
+
+        calls.clear()
+        v.setCompleted("ٹیسٹ", True)  # No-op: already completed
+        assert v.isModified() is True
+        assert len(calls) == 0
+
+    def testSaveClearsModifiedFlag(self, tmp_path):
+        """Saving a modified vocabulary marks it as unmodified."""
+        filepath = tmp_path / "SaveClearsModified.txt"
+        v = Vocabulary()
+        v.add("سلام", 5)
+        v.setCompleted("سلام", True)
+        assert v.isModified() is True
+        v.save(str(filepath))
+        assert v.isModified() is False
+
+    def testLoadClearsModifiedFlag(self, tmp_path):
+        """A loaded vocabulary reports unmodified with its data and status intact."""
+        filepath = tmp_path / "LoadClearsModified.txt"
+        v = Vocabulary()
+        v.add("hello", 10)
+        v.setCompleted("hello", True)
+        v.save(str(filepath))
+
+        loadedV = Vocabulary.load(str(filepath))
+        assert loadedV.isModified() is False
+        assert loadedV.counter["hello"] == 10
+        assert "hello" in loadedV.completed
+
+    def testAddIsCompletedTrueCompletesWord(self):
+        """Adding a word with isCompleted=True marks it completed in the same mutation."""
+        v = Vocabulary()
+        v.add("اردو", 3, isCompleted=True)
+        assert v.counter["اردو"] == 3
+        assert "اردو" in v.completed
+
+    def testAddIsCompletedDefaultFalseNeverTouchesCompleted(self):
+        """Adding with the default isCompleted=False neither completes nor un-completes."""
+        v = Vocabulary()
+        v.add("اردو", 1, isCompleted=True)
+        v.add("اردو", 2)  # Default: completion status is preserved
+        assert v.counter["اردو"] == 3
+        assert "اردو" in v.completed
+
+        v.add("python", 1)  # Default: a fresh word stays uncompleted
+        assert "python" not in v.completed
+
+    def testAddIsCompletedFiresExactlyOneNotification(self):
+        """Introducing a completed word is a single mutation with a single notification."""
+        v = Vocabulary()
+        calls = []
+        v.onChangeCallbacks.append(lambda: calls.append(1))
+        v.add("اردو", 3, isCompleted=True)
+        assert len(calls) == 1
+        assert "اردو" in v.completed
+
+    def testReplaceFiresExactlyOneNotification(self):
+        """Replacing a completed word fires exactly one notification."""
+        v = Vocabulary({"غلطی": 10})
+        v.setCompleted("غلطی", True)
+        calls = []
+        v.onChangeCallbacks.append(lambda: calls.append(1))
+        v.replace("غلطی", "درست")
+        assert len(calls) == 1
+        assert v.counter["درست"] == 10
+        assert "درست" in v.completed
+
+    def testNotifyChangesPrivateAndSetsDirty(self):
+        """notifyChanges is private, and _notifyChanges commits the modified flag."""
+        v = Vocabulary()
+        assert not hasattr(v, "notifyChanges")
+        v._notifyChanges()
+        assert v.isModified() is True
+
 # ******************************************************************************
 class TestSuggestion:
 
