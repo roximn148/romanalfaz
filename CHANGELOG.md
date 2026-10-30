@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org).
   twice: the redundant baseline `recompileLookup` call left over from the
   pre-observer `loadDictionary` design was removed, since `addVocabulary`
   already triggers the initial compilation
+- `RomanAlfaz.removeVocabulary` now detaches every occurrence of its
+  recompile callback, so a manually double-attached observer can no longer
+  double-recompile per mutation; the observer contract on the
+  `onChangeCallbacks` seam is documented on `Vocabulary`
 
 ## [0.1.0a7] - 2026-10-29
 
