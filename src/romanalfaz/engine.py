@@ -439,10 +439,13 @@ class RomanAlfaz:
         """
         Recompiles the unified lookup indices from all attached Vocabularies.
 
-        This method acts as a central data processor. It resets the internal
-        engines, flattens all attached source vocabularies, resolves multi-source
-        word collisions by summing their frequencies, and fully rebuilds both
-        the SymSpell fuzzy-search index and the Arabic reverse mapping.
+        This method acts as a central data processor. It flattens all attached
+        source vocabularies, resolves multi-source word collisions by summing
+        their frequencies, and fully rebuilds both the SymSpell fuzzy-search
+        index and the Arabic reverse mapping. The rebuild is atomic: the new
+        engines are populated into fresh structures and swapped in only when
+        the build succeeds, so a failed build leaves the previously compiled
+        state intact.
 
         Raises:
             AssertionError: If a stored word contains characters outside the
@@ -454,12 +457,13 @@ class RomanAlfaz:
             O(N) where N is the total number of unique words across all tracked
             Vocabulary instances.
         """
-        # STAGE 1: Reset Internal Search Engines -------------------------------
-        # Re-initialize SymSpell to ensure a clean state before adding entries
-        # Wiping previous data structures ensures dead records (e.g., deleted words)
-        # do not linger in memory after a vocabulary mutation.
-        self.symSpell = SymSpell()
-        self.reverseMapping.clear()
+        # STAGE 1: Build Fresh Search Engines -----------------------------------
+        # Populate brand-new engine structures rather than wiping the live ones,
+        # so a failed build leaves the previously compiled state intact
+        # (dead records are discarded wholesale when the fresh engines commit).
+        freshSymSpell = SymSpell()
+        freshReverseMapping: defaultdict[str, set[tuple[str, int]]] = defaultdict(set)
+        freshArabicWords: set[str] = set()
 
         # STAGE 2: Flatten & Sum Arabic script Word Frequencies ----------------
         # Multiple dictionaries might contain the exact same Arabic word.
@@ -471,7 +475,7 @@ class RomanAlfaz:
         # STAGE 2b: Index arabic-script words for direct existence checks --------
         # Project the aggregate vocabulary into normalized arabic-script keys so
         # hasWord can answer word-presence queries in O(1) without fuzzy matching.
-        self.arabicWords = {normalize(w) for w in aggregateCounter}
+        freshArabicWords = {normalize(w) for w in aggregateCounter}
 
         # STAGE 3: Romanization & Homonym Mapping ------------------------------
         # Different Arabic words can resolve to the exact same Romanized string.
@@ -493,15 +497,21 @@ class RomanAlfaz:
                 rm2arMapping[encRomanWord][arWord] = 0
             rm2arMapping[encRomanWord][arWord] += freq
 
-        # STAGE 4: Populate Operational Lookup Engines -------------------------
-        # Commit the computed structural matrices back into operational states.
+        # STAGE 4: Populate Fresh Lookup Engines ---------------------------------
         for encRomanWord, combinedFreq in romanFreqCounter.items():
             # Populate SymSpell dictionary with the total aggregated string frequency
-            self.symSpell.create_dictionary_entry(encRomanWord, combinedFreq)
+            freshSymSpell.create_dictionary_entry(encRomanWord, combinedFreq)
 
             # Hydrate the reverse mapping set for native script ranking inside suggest()
             for arWord, freq in rm2arMapping[encRomanWord].items():
-                self.reverseMapping[encRomanWord].add((arWord, freq))
+                freshReverseMapping[encRomanWord].add((arWord, freq))
+
+        # STAGE 5: Commit the Fresh Engines Atomically ---------------------------
+        # Only reached when the full build succeeded, so a failed build
+        # (e.g., an unmapped character) leaves the previous engine state intact.
+        self.symSpell = freshSymSpell
+        self.reverseMapping = freshReverseMapping
+        self.arabicWords = freshArabicWords
 
     # **************************************************************************
     def dictLookup(
