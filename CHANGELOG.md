@@ -30,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - `Vocabulary.load` now introduces each saved word through a single
   `add(..., isCompleted=True)` mutation
 
+### Fixed
+- `RomanAlfaz.recompileLookup` now rebuilds the lookup index atomically: a
+  build that fails mid-way (e.g., an unmapped character) no longer wipes the
+  previously compiled engine, so `hasWord` and `suggest` stay consistent
+  after the propagated assertion
+
 ## [0.1.0a7] - 2026-10-29
 
 ### Added

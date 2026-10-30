@@ -367,6 +367,18 @@ class TestRomanAlfaz:
             RomanAlfaz([v])
         assert "abc" in str(excinfo.value)
 
+    def testRecompileFailureLeavesEngineStateIntact(self):
+        """A recompile that fails mid-build leaves the previously compiled engine intact."""
+        v1 = Vocabulary({"کتاب": 10})
+        ra = RomanAlfaz([v1])
+        bad = Vocabulary({"abc": 1})  # Latin chars are outside the Arabic->Roman map
+        with pytest.raises(AssertionError):
+            ra.addVocabulary(bad)
+        # The failed build must not clobber the previously consistent engine
+        assert ra.hasWord("کتاب") is True
+        assert ra.symSpell.words["KTAB"] == 10
+        assert ra.getBestMatch("kitab") is not None
+
     def testRemoveVocabularyPurgesAndRecalculates(self):
         """Verify that removing a vocabulary drops its frequency weights immediately."""
         v1 = Vocabulary({"دنیا": 10, "وزیر": 5})
