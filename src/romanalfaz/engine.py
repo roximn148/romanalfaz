@@ -377,13 +377,14 @@ class RomanAlfaz:
         else:
             # Fallback behavior when no specific vocabularies are passed:
             # attempt to resolve and initialize using the default wordlist source.
+            # addVocabulary triggers the initial state compilation, so no
+            # separate baseline recompile is needed here.
             try:
                 vocab = Vocabulary.load(getDefaultWordsFilename())
             except (OSError, ValueError) as e:
                 raise DictionaryNotFoundError(e)
             else:
                 self.addVocabulary(vocab)
-            self.recompileLookup()
 
     # **************************************************************************
     def addVocabulary(self, vocab: Vocabulary) -> None:
