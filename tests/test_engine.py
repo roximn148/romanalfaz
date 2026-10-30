@@ -347,6 +347,19 @@ class TestRomanAlfaz:
         assert len(ra.symSpell.words) == 0
         assert ra.hasWord("کتاب") is False
 
+    def testDefaultConstructionRecompilesExactlyOnce(self):
+        """The default wordlist path compiles the lookup index exactly once."""
+        calls = []
+        original = RomanAlfaz.recompileLookup
+
+        def counting(self):
+            calls.append(1)
+            return original(self)
+
+        with patch.object(RomanAlfaz, "recompileLookup", counting):
+            RomanAlfaz()
+        assert calls == [1]
+
     def testAddVocabularyUpdatesStateAndSumsCollisions(self):
         """Verify that adding new vocabularies triggers compilation and combines frequencies."""
         v1 = Vocabulary({"دنیا": 10, "وزیر": 5})

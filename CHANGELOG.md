@@ -38,6 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - `RomanAlfaz(vocabularies=[])` no longer falls back to the bundled default
   wordlist; an explicit empty list now yields an engine with no vocabularies
   (only `None` triggers the default-dictionary fallback)
+- The default wordlist construction no longer recompiles the lookup index
+  twice: the redundant baseline `recompileLookup` call left over from the
+  pre-observer `loadDictionary` design was removed, since `addVocabulary`
+  already triggers the initial compilation
 
 ## [0.1.0a7] - 2026-10-29
 
