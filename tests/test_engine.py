@@ -399,6 +399,15 @@ class TestRomanAlfaz:
         assert ra.symSpell.words["KTAB"] == 10
         assert ra.getBestMatch("kitab") is not None
 
+    def testRemoveVocabularyDetachesDuplicateCallbackEntries(self):
+        """Detaching removes every occurrence of the recompile callback."""
+        v = Vocabulary({"کتاب": 5})
+        ra = RomanAlfaz([v])
+        # Simulate a manual double attach through the public seam
+        v.onChangeCallbacks.append(ra.recompileLookup)
+        ra.removeVocabulary(v)
+        assert ra.recompileLookup not in v.onChangeCallbacks
+
     def testRemoveVocabularyPurgesAndRecalculates(self):
         """Verify that removing a vocabulary drops its frequency weights immediately."""
         v1 = Vocabulary({"دنیا": 10, "وزیر": 5})

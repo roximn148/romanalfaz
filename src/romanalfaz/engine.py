@@ -37,7 +37,14 @@ def getDefaultWordsFilename() -> str:
 
 # ******************************************************************************
 class Vocabulary:
-    """Manages a collection of words with their frequencies and completion status."""
+    """Manages a collection of words with their frequencies and completion status.
+
+    Mutation observation: every actual mutation fires change notifications
+    to the callbacks registered in ``onChangeCallbacks``, the observer
+    registration seam. ``RomanAlfaz`` uses it to attach and detach its own
+    ``recompileLookup`` observer; attach each observer at most once, since
+    duplicate entries fire duplicate notifications.
+    """
 
     # --------------------------------------------------------------------------
     def __init__(self, data: dict[str, int] | None = None):
@@ -433,7 +440,9 @@ class RomanAlfaz:
             self.vocabularies.remove(vocab)
             # Detach the callback function to prevent ghost notifications
             # and allow proper garbage collection of the vocabulary object.
-            if self.recompileLookup in vocab.onChangeCallbacks:
+            # Remove every occurrence, since duplicate manual entries would
+            # each fire a recompile per mutation.
+            while self.recompileLookup in vocab.onChangeCallbacks:
                 vocab.onChangeCallbacks.remove(self.recompileLookup)
             # Recompile immediately to completely purge the unlinked
             # vocabulary's words from the system.
