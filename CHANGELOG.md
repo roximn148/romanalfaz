@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+## [0.1.0a8] - 2026-10-31
+
 ### Added
 - `Vocabulary.isModified()`: reports whether the word list has changed
   since construction or the last `save`/`load`
