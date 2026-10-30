@@ -35,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
   build that fails mid-way (e.g., an unmapped character) no longer wipes the
   previously compiled engine, so `hasWord` and `suggest` stay consistent
   after the propagated assertion
+- `RomanAlfaz(vocabularies=[])` no longer falls back to the bundled default
+  wordlist; an explicit empty list now yields an engine with no vocabularies
+  (only `None` triggers the default-dictionary fallback)
 
 ## [0.1.0a7] - 2026-10-29
 

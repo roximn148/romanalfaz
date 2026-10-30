@@ -342,6 +342,8 @@ class RomanAlfaz:
         Args:
             vocabularies (list[Vocabulary] | None): An optional collection of
                 Vocabulary instances to populate the search matrix immediately.
+                ``None`` falls back to the bundled default wordlist; an
+                empty list yields an engine with no vocabularies.
         """
         # Initialize the underlying SymSpell engine used for edit-distance algorithms.
         self.symSpell = SymSpell()
@@ -365,7 +367,9 @@ class RomanAlfaz:
         self.vocabularies: list[Vocabulary] = []
 
         # Process and link incoming starter vocabularies if they are provided.
-        if vocabularies:
+        # An explicit empty list is distinct from None: it yields an engine
+        # with no vocabularies rather than falling back to the default wordlist.
+        if vocabularies is not None:
             for vocab in vocabularies:
                 # addVocabulary handles tracking, callback attachments,
                 # and triggers the initial state compilation.

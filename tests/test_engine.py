@@ -340,6 +340,13 @@ class TestRomanAlfaz:
         assert "KY" in ra.symSpell.words
         assert ra.symSpell.words["KE"] == 743949
 
+    def testEmptyVocabulariesListYieldsEmptyEngine(self):
+        """Verify that an explicit empty list yields an engine with no vocabularies."""
+        ra = RomanAlfaz(vocabularies=[])
+        assert len(ra.vocabularies) == 0
+        assert len(ra.symSpell.words) == 0
+        assert ra.hasWord("کتاب") is False
+
     def testAddVocabularyUpdatesStateAndSumsCollisions(self):
         """Verify that adding new vocabularies triggers compilation and combines frequencies."""
         v1 = Vocabulary({"دنیا": 10, "وزیر": 5})
