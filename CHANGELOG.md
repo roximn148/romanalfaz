@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [Unreleased]
+
+### Added
+- `RomanAlfaz.minRomanWordLength` and `RomanAlfaz.maxRomanWordLength`: the
+  minimum and maximum length (in characters) of the encoded roman words in
+  the aggregate dictionary. Both are `None` while the dictionary is empty,
+  and are recomputed from the aggregate vocabulary on every `recompileLookup`
+  and committed atomically with the lookup index, so a failed recompile leaves
+  the previously committed statistics intact.
+
 ## [0.1.0a9] - 2026-11-01
 
 ### Added

@@ -334,6 +334,18 @@ class RomanAlfaz:
         reverseMapping (defaultdict[str, set[tuple[str, int]]]): A lookup table mapping
             encoded Roman words to a set of their original native script Arabic variants
             along with their aggregate frequencies. Used to resolve homonyms during queries.
+        arabicWords (set[str]): The normalized arabic-script forms of every dictionary
+            word, for O(1) existence checks in hasWord. Rebuilt from the aggregate
+            vocabulary on every recompileLookup, so it stays in sync with all attached
+            vocabularies.
+        minRomanWordLength (int | None): The minimum length, in characters, of the
+            encoded roman words in the aggregate dictionary. None when the dictionary
+            is empty. Recomputed from the aggregate vocabulary on every recompileLookup,
+            so it stays in sync with all attached vocabularies.
+        maxRomanWordLength (int | None): The maximum length, in characters, of the
+            encoded roman words in the aggregate dictionary. None when the dictionary
+            is empty. Recomputed from the aggregate vocabulary on every recompileLookup,
+            so it stays in sync with all attached vocabularies.
         vocabularies (list[Vocabulary]): A collection holding references to all
             currently attached and monitored Vocabulary instances active in the system.
     """
@@ -369,6 +381,14 @@ class RomanAlfaz:
         # O(1) existence checks in hasWord. Rebuilt from the aggregate vocabulary
         # on every recompileLookup, so it stays in sync with all attached vocabularies.
         self.arabicWords: set[str] = set()
+
+        # Holds the minimum and maximum length (in characters) of the encoded
+        # roman words in the aggregate dictionary. None when the dictionary is
+        # empty (no vocabularies attached yet). Recomputed from the aggregate
+        # vocabulary on every recompileLookup, so it stays in sync with all
+        # attached vocabularies.
+        self.minRomanWordLength: int | None = None
+        self.maxRomanWordLength: int | None = None
 
         # Holds references to all monitored Vocabulary instances active in the system.
         self.vocabularies: list[Vocabulary] = []
@@ -456,10 +476,11 @@ class RomanAlfaz:
         This method acts as a central data processor. It flattens all attached
         source vocabularies, resolves multi-source word collisions by summing
         their frequencies, and fully rebuilds both the SymSpell fuzzy-search
-        index and the Arabic reverse mapping. The rebuild is atomic: the new
-        engines are populated into fresh structures and swapped in only when
-        the build succeeds, so a failed build leaves the previously compiled
-        state intact.
+        index and the Arabic reverse mapping. It also recomputes the min/max
+        encoded-roman word length statistics from the aggregate vocabulary. The
+        rebuild is atomic: the new engines are populated into fresh structures
+        and swapped in only when the build succeeds, so a failed build leaves
+        the previously compiled state, including the length statistics, intact.
 
         Raises:
             AssertionError: If a stored word contains characters outside the
@@ -478,6 +499,8 @@ class RomanAlfaz:
         freshSymSpell = SymSpell()
         freshReverseMapping: defaultdict[str, set[tuple[str, int]]] = defaultdict(set)
         freshArabicWords: set[str] = set()
+        freshMinRomanWordLength: int | None = None
+        freshMaxRomanWordLength: int | None = None
 
         # STAGE 2: Flatten & Sum Arabic script Word Frequencies ----------------
         # Multiple dictionaries might contain the exact same Arabic word.
@@ -506,6 +529,17 @@ class RomanAlfaz:
             # Accumulate weight for the Roman word entry (used by SymSpell)
             romanFreqCounter[encRomanWord] += freq
 
+            # Track the min/max encoded-roman word length across the aggregate set.
+            # freshMin/freshMax are locals (not self.) so a failed build leaves the
+            # previously committed statistics intact (see STAGE 5 atomic commit).
+            # Homonyms (multiple arabic words sharing one roman key) repeat the same
+            # length, so this is correct per-arabic-word as well as per-roman-key.
+            romanWordLength = len(encRomanWord)
+            if freshMinRomanWordLength is None or romanWordLength < freshMinRomanWordLength:
+                freshMinRomanWordLength = romanWordLength
+            if freshMaxRomanWordLength is None or romanWordLength > freshMaxRomanWordLength:
+                freshMaxRomanWordLength = romanWordLength
+
             # Record or increment the specific Arabic variant bound to this Roman word
             if arWord not in rm2arMapping[encRomanWord]:
                 rm2arMapping[encRomanWord][arWord] = 0
@@ -526,6 +560,8 @@ class RomanAlfaz:
         self.symSpell = freshSymSpell
         self.reverseMapping = freshReverseMapping
         self.arabicWords = freshArabicWords
+        self.minRomanWordLength = freshMinRomanWordLength
+        self.maxRomanWordLength = freshMaxRomanWordLength
 
     # **************************************************************************
     def dictLookup(

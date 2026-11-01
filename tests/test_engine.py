@@ -521,5 +521,63 @@ class TestRomanAlfaz:
 
         assert ra.hasWord("کتاب") is False
 
+    def testRomanWordLengthStatsForKnownVocabulary(self):
+        """Verify min/max roman word length are computed correctly for a known vocabulary."""
+        ra = RomanAlfaz([Vocabulary({"کتاب": 10, "ضرورت": 2, "وزیر": 3, "دنیا": 5})])
+        # roman encodings: کتاب->KTAB(4), ضرورت->ZRORT(5), وزیر->WZYR(4), دنیا->DNYA(4)
+        assert ra.minRomanWordLength == 4
+        assert ra.maxRomanWordLength == 5
+
+    def testRomanWordLengthStatsEmptyEngine(self):
+        """Verify min/max roman word length are None for an engine with no vocabularies."""
+        ra = RomanAlfaz(vocabularies=[])
+        assert ra.minRomanWordLength is None
+        assert ra.maxRomanWordLength is None
+
+    def testRomanWordLengthStatsRefreshOnMutation(self):
+        """Verify min/max roman word length update when an attached vocabulary is mutated."""
+        v = Vocabulary({"کتاب": 10})  # KTAB(4)
+        ra = RomanAlfaz([v])
+        assert ra.minRomanWordLength == 4
+        assert ra.maxRomanWordLength == 4
+        # Adding a longer roman word: ضرورت -> ZRORT(5)
+        v.add("ضرورت", 2)
+        assert ra.minRomanWordLength == 4
+        assert ra.maxRomanWordLength == 5
+
+    def testRomanWordLengthStatsRefreshOnRemoveVocabulary(self):
+        """Verify min/max roman word length update when a vocabulary is removed."""
+        v1 = Vocabulary({"کتاب": 10})  # KTAB(4)
+        v2 = Vocabulary({"ضرورت": 2})  # ZRORT(5)
+        ra = RomanAlfaz([v1, v2])
+        assert ra.minRomanWordLength == 4
+        assert ra.maxRomanWordLength == 5
+        ra.removeVocabulary(v2)
+        assert ra.minRomanWordLength == 4
+        assert ra.maxRomanWordLength == 4
+
+    def testRomanWordLengthStatsHomonymSharingRomanKey(self):
+        """Verify min/max roman word length are correct when arabic words share a roman key."""
+        v1 = Vocabulary({"کرون": 10, "کتاب": 5})  # KRON(4), KTAB(4)
+        v2 = Vocabulary({"کروں": 20, "ضرورت": 3})  # KRON(4), ZRORT(5)
+        ra = RomanAlfaz([v1, v2])
+        # Aggregate roman keys: KRON(4) [کرون+کروں homonyms], KTAB(4), ZRORT(5)
+        # min/max over the unique roman keys: min=4, max=5, unaffected by homonym count
+        assert ra.minRomanWordLength == 4
+        assert ra.maxRomanWordLength == 5
+
+    def testRecompileFailureLeavesRomanWordLengthStatsIntact(self):
+        """A recompile that fails mid-build leaves the previously committed stats intact."""
+        v1 = Vocabulary({"کتاب": 10})  # KTAB(4)
+        ra = RomanAlfaz([v1])
+        assert ra.minRomanWordLength == 4
+        assert ra.maxRomanWordLength == 4
+        bad = Vocabulary({"abc": 1})  # Latin chars are outside the Arabic->Roman map
+        with pytest.raises(AssertionError):
+            ra.addVocabulary(bad)
+        # The failed build must not clobber the previously consistent statistics
+        assert ra.minRomanWordLength == 4
+        assert ra.maxRomanWordLength == 4
+
 
 # ******************************************************************************
