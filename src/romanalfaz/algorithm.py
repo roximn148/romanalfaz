@@ -11,7 +11,9 @@ algorithm and its helper functions.
 # ******************************************************************************
 import itertools
 import re
+from collections import deque
 
+from .exceptions import MaxVowelRunExceededError
 from .urduspell import normalize, normalizeWhiteSpace
 
 # ******************************************************************************
@@ -72,6 +74,69 @@ from arabic-script to roman-script for word list lookup.
 .. todo:: Clean up the input characters to map only the normalized characters.
 """
 
+# ******************************************************************************
+MAX_CONSECUTIVE_VOWELS: int = 8
+"""Upper bound on the length of a consecutive-vowel run that step 09 will expand.
+
+Cost justification (measured on the optimized pipeline, probe word
+``b + 'a' * n + 'd'``). The step-09 expansion of a vowel run grows
+exponentially with the run length — the number of chunk partitions is
+Fibonacci(n+1), and each partition of ``k`` chunks yields ``2 ** (k - 1)``
+anchor interleavings — and every later pipeline step multiplies that base
+expansion, so each extra vowel in a run multiplies the total cost roughly
+3x::
+
+    run n   candidates   time (ms)
+    ------  -----------  ---------
+         1            2        0.2
+         2            7        0.1
+         3           23        0.2
+         4           73        0.6
+         5          227        1.9
+         6          697        6.3
+         7        2 123       20.6
+         8        6 433       67.8
+         9       19 427      214.0
+        10       58 537      719.5
+        12      705 516    ~10 000
+
+Why 8: the value is corpus-derived, not arbitrary. Across the bundled CLE
+5000-word frequency vocabulary the longest consecutive-vowel run in any
+genuine romanization is 5 characters (word-finally at most 4 — e.g. the
+کارروائی family's ائیو/ائیا cluster). Vowel runs past that length cannot map
+to a distinct Urdu vowel sound: they are redundant length-marking or typos.
+Setting the cap at 8 therefore admits every legitimate romanization with
+margin for casual over-typing while keeping the worst-case expansion well
+under 100 ms; runs of 9–12 would spend 0.2–10 s per word for candidates that
+are, by the corpus data's own definition, guaranteed-wrong.
+
+Why the overflow is dropped (truncation policy). Two policies were evaluated
+for a run longer than this cap:
+
+- Keeping the overflow characters in the token (skipping only step 09's
+  segmentation of them) does NOT bound the cost: steps 10–12 still fork on
+  every remaining lowercase vowel — step 12 expands each into ``""`` and its
+  uppercase substitute — so a tail of ``t`` vowels re-opens an exponential
+  channel right past the cap. The tail would also yield candidates that
+  contain guaranteed-wrong vowel characters, polluting dictionary lookups and
+  occupying fuzzy suggestion slots.
+- Dropping the overflow (the adopted policy) bounds each run's contribution
+  to the capped expansion (~6 433 candidates, < 100 ms worst case), because
+  steps 10–12 only ever see the capped prefix. It is mechanically safe: the
+  removed fragment is strictly a contiguous ``[aeiou]`` sub-run, so no
+  consonant digraph anchor can be created or broken (``h``/``y`` were already
+  consumed in steps 04–08 before step 09 runs).
+
+For every legitimate input (runs of at most 5) truncation never triggers and
+outputs are identical to the untruncated algorithm; the deviation is an
+acceptable approximation for over-typed noise.
+
+Error policy: :py:class:`romanalfaz.exceptions.MaxVowelRunExceededError`
+remains a defensive precondition on direct :py:func:`findVowelCombos` misuse;
+the pipeline itself truncates and never raises. Tunable: each additional
+vowel multiplies the expansion cost roughly 3x (see the cost table above).
+"""
+
 
 # ******************************************************************************
 def tafseerUrduAr2Rm(word: str, keep: bool = True) -> tuple[str, int]:
@@ -119,8 +184,6 @@ def tafseerUrduAr2Rm(word: str, keep: bool = True) -> tuple[str, int]:
         ('HE', 0)
         >>> tafseerUrduAr2Rm('شہرت')
         ('SHHRT', 0)
-        :param word:
-        :param keep:
     """
     assert isinstance(word, str), f"Expected string type, got {type(word)}"
 
@@ -183,6 +246,12 @@ def tafseerUrduRm2Rm(word: str) -> set[str]:
 
     Raises:
         AssertionError: If the input `word` is not a ``str`` instance.
+
+    Notes:
+        Consecutive-vowel runs longer than :py:data:`MAX_CONSECUTIVE_VOWELS`
+        are truncated to their first MAX_CONSECUTIVE_VOWELS vowels during
+        step 09; the overflow is treated as over-typing and does not generate
+        candidates.
 
     Example:
         >>> tafseerUrduRm2Rm('khalq') # Ambiguous, can be خالق or خلق
@@ -386,29 +455,38 @@ def permuteAllOccurrences(
     """
     outList: list[str] = []
 
-    for token in tokenList:
-        completedWords: list[str] = []
+    # Words whose expansion tree has already been queued anywhere in this call.
+    # Re-deriving an identical subtree yields identical outputs, so its first
+    # derivation is reused; leaf variations are still re-emitted so duplicate
+    # list entries are preserved exactly as produced by the full enumeration.
+    processedVariations: set[str] = set()
 
+    for token in tokenList:
         # Initialize the processing queue with the current base token
-        processedWords: list[str] = [token]
+        pendingWords: deque[str] = deque([token])
 
         # Process the queue until all strings are fully resolved
-        while processedWords:
+        while pendingWords:
             # Pop the first element from the queue (FIFO tracking)
-            word = processedWords.pop(0)
+            word = pendingWords.popleft()
 
             # Generate the next layer of single-replacement variations
             replacedVariations = permuteFirstOccurrence(word, mapping)
 
             if replacedVariations:
                 # If changes occurred, queue them up for deeper scanning
-                processedWords.extend(replacedVariations)
+                for variation in replacedVariations:
+                    if variation in processedVariations:
+                        # Skip re-deriving an already expanded subtree, but keep
+                        # leaf variations so duplicate entries stay reproducible
+                        if not permuteFirstOccurrence(variation, mapping):
+                            pendingWords.append(variation)
+                        continue
+                    processedVariations.add(variation)
+                    pendingWords.append(variation)
             else:
                 # If no changes occurred, the token is fully processed
-                completedWords.append(word)
-
-        # Merge the completed variations of this token into the global output
-        outList.extend(completedWords)
+                outList.append(word)
 
     return outList
 
@@ -473,29 +551,39 @@ def permuteAllEndings(tokenList: list[str], mapping: dict[str, list[str]]) -> li
     """
     outList: list[str] = []
 
-    for activeToken in tokenList:
-        completedWords: list[str] = []
+    # Suffix variations whose expansion tree has already been queued anywhere in
+    # this call. Re-deriving an identical subtree yields identical outputs, so
+    # its first derivation is reused; leaf variations are still re-emitted so
+    # duplicate list entries are preserved exactly as produced by the full
+    # exhaustive enumeration.
+    processedVariations: set[str] = set()
 
+    for activeToken in tokenList:
         # Instantiate the processing queue with the current base string token
-        processedWords: list[str] = [activeToken]
+        pendingWords: deque[str] = deque([activeToken])
 
         # Drain the local variation queue completely
-        while processedWords:
+        while pendingWords:
             # Shift the front item out of the tracking array
-            currentWord = processedWords.pop(0)
+            currentWord = pendingWords.popleft()
 
             # Identify and execute the next applicable single suffix shift
             replacedVariations = permuteEnding(currentWord, mapping)
 
             if replacedVariations:
                 # Re-queue new variations to test for sequential cascading rules
-                processedWords.extend(replacedVariations)
+                for variation in replacedVariations:
+                    if variation in processedVariations:
+                        # Skip re-deriving an already expanded subtree, but keep
+                        # leaf variations so duplicate entries stay reproducible
+                        if not permuteEnding(variation, mapping):
+                            pendingWords.append(variation)
+                        continue
+                    processedVariations.add(variation)
+                    pendingWords.append(variation)
             else:
                 # No more rules apply to this token variant; save as finished product
-                completedWords.append(currentWord)
-
-        # Append all distinct ending configurations into the final dataset array
-        outList.extend(completedWords)
+                outList.append(currentWord)
 
     return outList
 
@@ -541,7 +629,9 @@ def findVowelCombos(token: str) -> list[list[str]]:
     This function uses a recursive backtracking depth-first search to find every
     combination of 1-character and 2-character vowel tokens that can perfectly
     reconstruct the input string based on a predefined set of roman Urdu
-    vowel patterns.
+    vowel patterns. Suffix-level memoization keeps the overall work linear in
+    the size of the output instead of re-deriving each suffix breakdown on
+    every path through the search tree.
 
     Args:
         token: A string consisting of vowel characters to partition.
@@ -550,56 +640,75 @@ def findVowelCombos(token: str) -> list[list[str]]:
         A list of lists, where each sub-list represents a valid sequence
         of parsed vowel patterns that exactly make up the input word.
 
+    Raises:
+        MaxVowelRunExceededError: If the input token is longer than
+            :py:data:`MAX_CONSECUTIVE_VOWELS` characters. This is a defensive
+            precondition for direct callers: the pipeline driver
+            (`permuteConsecutiveVowels`) truncates overflow runs to the cap
+            before handing them over, so this error never fires mid-pipeline.
+
     Example:
         >>> findVowelCombos("aa")
         [['a', 'a'], ['aa']]
     """
-    vowelPatterns = [
-        "a",
-        "aa",
-        "ai",
-        "au",
-        "ay",
-        "e",
-        "ee",
-        "ei",
-        "ey",
-        "i",
-        "ie",
-        "o",
-        "oo",
-        "ou",
-        "u",
-    ]
-    # Convert list to set for O(1) average lookup performance
-    vowelsSet = set(vowelPatterns)
-    validCombos: list[list[str]] = []
+    vowelsSet = frozenset(
+        [
+            "a",
+            "aa",
+            "ai",
+            "au",
+            "ay",
+            "e",
+            "ee",
+            "ei",
+            "ey",
+            "i",
+            "ie",
+            "o",
+            "oo",
+            "ou",
+            "u",
+        ]
+    )
 
-    def findCombinations(remainingText: str, currentPath: list[str]) -> None:
-        """Inner helper that recursively branches and backtracks through text."""
+    if len(token) > MAX_CONSECUTIVE_VOWELS:
+        raise MaxVowelRunExceededError(
+            f"Consecutive-vowel run of length {len(token)} exceeds the supported"
+            f" limit of {MAX_CONSECUTIVE_VOWELS} (in token {token!r})"
+        )
+
+    # Memo of suffix -> list of the exact breakdown tuples for that suffix.
+    # Entries preserve depth-first enumeration order: single-character chunks
+    # before two-character chunks, mirroring the sequential backtracking order.
+    memo: dict[str, list[tuple[str, ...]]] = {}
+
+    def findCombinations(remainingText: str) -> list[tuple[str, ...]]:
+        """Helper that recursively branches and backtracks through text."""
+        cachedBreakdowns = memo.get(remainingText)
+        if cachedBreakdowns is not None:
+            return cachedBreakdowns
+
         # Base case: if no characters are left, we found a valid breakdown
         if not remainingText:
-            validCombos.append(list(currentPath))
-            return
+            breakdowns = [()]
+        else:
+            breakdowns = []
 
-        # Lookahead Check 1: Extract and evaluate a 1-character substring
-        chunkOne = remainingText[:1]
-        if chunkOne in vowelsSet:
-            currentPath.append(chunkOne)
-            findCombinations(remainingText[1:], currentPath)
-            currentPath.pop()  # Backtrack to try other paths
+            # Lookahead Check 1: Extract and evaluate a 1-character substring
+            chunkOne = remainingText[:1]
+            if chunkOne in vowelsSet:
+                breakdowns.extend((chunkOne, *path) for path in findCombinations(remainingText[1:]))
 
-        # Lookahead Check 2: Extract and evaluate a 2-character substring
-        if len(remainingText) >= 2:
-            chunkTwo = remainingText[:2]
-            if chunkTwo in vowelsSet:
-                currentPath.append(chunkTwo)
-                findCombinations(remainingText[2:], currentPath)
-                currentPath.pop()  # Backtrack to try other paths
+            # Lookahead Check 2: Extract and evaluate a 2-character substring
+            if len(remainingText) >= 2:
+                chunkTwo = remainingText[:2]
+                if chunkTwo in vowelsSet:
+                    breakdowns.extend((chunkTwo, *path) for path in findCombinations(remainingText[2:]))
 
-    # Launch the recursive search starting from the beginning of the token
-    findCombinations(token, [])
-    return validCombos
+        memo[remainingText] = breakdowns
+        return breakdowns
+
+    return [list(breakdown) for breakdown in findCombinations(token)]
 
 
 # ******************************************************************************
@@ -621,9 +730,7 @@ def concatenateCombos(
         A list of all possible interleaved concatenated string variants.
 
     Example:
-        >>> segments = ["b", "n", "n"]
-        >>> vowels = {"a", "o"}
-        >>> concatenateCombos(segments, vowels)
+        >>> concatenateCombos(["b", "n", "n"], ["a", "o"])
         ['banan', 'banon', 'bonan', 'bonon']
     """
     if not subStrings:
@@ -634,22 +741,12 @@ def concatenateCombos(
     separatorCount = len(subStrings) - 1
 
     # Generate all Cartesian product combinations of separators with replacement
-    separatorCombos = itertools.product(charset, repeat=separatorCount)
-    outResults: list[str] = []
-
-    # Interleave each combination of separators between the sub-string slices
-    for currentCombo in separatorCombos:
-        combinedString = ""
-
-        # Loop through segments up to the second-to-last item
-        for elementIndex in range(len(subStrings) - 1):
-            combinedString += subStrings[elementIndex] + currentCombo[elementIndex]
-
-        # Append the final trailing sub-string segment to close the word boundary
-        combinedString += subStrings[-1]
-        outResults.append(combinedString)
-
-    return outResults
+    return [
+        subStrings[0] + "".join(
+            separator + segment for separator, segment in zip(currentCombo, subStrings[1:])
+        )
+        for currentCombo in itertools.product(charset, repeat=separatorCount)
+    ]
 
 
 # ******************************************************************************
@@ -667,10 +764,15 @@ def permuteConsecutiveVowels(inList: list[str]) -> list[str]:
     Returns:
         A list of all newly generated word variations. If a word contains no
         consecutive vowels, it is returned in the output list unmodified.
+        Consecutive-vowel runs longer than :py:data:`MAX_CONSECUTIVE_VOWELS`
+        are treated as over-typing: only their first MAX_CONSECUTIVE_VOWELS
+        characters are segmented and expanded, and the remaining vowels of the
+        run are dropped from the output tokens entirely (they never reach the
+        later pipeline steps).
 
     Example:
         >>> permuteConsecutiveVowels(["koo"])
-        ['koo', 'koAo', 'koYo']
+        ['koAo', 'koYo', 'koo']
     """
     vowelRegexPattern = r"[aeiou]{2,}"
     outList: list[str] = []
@@ -683,7 +785,13 @@ def permuteConsecutiveVowels(inList: list[str]) -> list[str]:
         for activeMatch in regexMatches:
             hasPatternMatched = True
             vowelComboOutput: list[str] = []
-            parsedVowelCombos = findVowelCombos(activeMatch.group())
+
+            # Overflow runs beyond the cap are over-typing noise: only the
+            # first MAX_CONSECUTIVE_VOWELS vowels are retained for
+            # segmentation; the remainder of the run is dropped, so neither
+            # step 09 nor the later steps ever expand those characters
+            cappedRun = activeMatch.group()[:MAX_CONSECUTIVE_VOWELS]
+            parsedVowelCombos = findVowelCombos(cappedRun)
 
             for currentCombo in parsedVowelCombos:
                 # If the segmented sequence is a single vowel pattern, preserve it

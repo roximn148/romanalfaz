@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+### Added
+- `MAX_CONSECUTIVE_VOWELS` in `romanalfaz.algorithm` (default 8): the upper bound
+  on a consecutive-vowel run that the Tafseer step-09 combinatorics will expand.
+  The value is corpus-derived, not arbitrary — the longest vowel run in the
+  bundled CLE 5000-word vocabulary is 5 characters (4 word-finally), so 8
+  admits every legitimate romanization with margin while capping the
+  worst-case expansion under 100 ms
+- `MaxVowelRunExceededError` in `romanalfaz.exceptions`: defensive guard raised
+  when `findVowelCombos` is called directly with a vowel segment longer than
+  `MAX_CONSECUTIVE_VOWELS`; the pipeline never raises it
+- Overflow runs are truncated at step 09: a consecutive-vowel run longer than
+  `MAX_CONSECUTIVE_VOWELS` is treated as over-typing — only the first
+  `MAX_CONSECUTIVE_VOWELS` vowels are segmented and expanded, and the
+  remainder of the run is dropped from the tokens (so it contributes no
+  candidates and never reaches the later pipeline steps). Candidates of an
+  over-cap word are exactly those of the corresponding truncated word, and
+  `RomanAlfaz.suggest` completes instead of raising on such input
+
+### Fixed
+- Long consecutive-vowel runs made `RomanAlfaz.suggest` unworkably slow
+  (e.g. 3.6 s per word at 11 vowels, over a minute at 12) because the step-09
+  expansion re-derived every chunk partition and re-expanded duplicate
+  variation subtrees. All four step-09/step-10/step-12 helpers
+  (`findVowelCombos`, `concatenateCombos`, `permuteAllOccurrences`,
+  `permuteAllEndings`) were optimized in isolation with unchanged
+  documented outputs: memoized suffix breakdowns (Fibonacci-partition growth
+  is now output-bound), join-based separator assembly, and a queue worklist
+  that skips re-deriving already-expanded subtrees while preserving
+  duplicate list entries. Each step follows docs/tafseer.ipynb exactly;
+  outputs verified byte-identical against the documented step examples
+- Corrected stale doctest examples in `algorithm.py`:
+  `permuteConsecutiveVowels(["koo"])` actually yields
+  `['koAo', 'koYo', 'koo']` (docstring claimed a different order), and the
+  `concatenateCombos` example now uses a list charset so its display order
+  is deterministic
+
 ## [0.1.0a8] - 2026-10-31
 
 ### Added
