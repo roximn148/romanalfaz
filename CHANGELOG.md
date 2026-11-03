@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [Unreleased]
+
+### Changed
+- Bump development Python from 3.10 to 3.13 (`.python-version`, ruff `target-version`, pyrefly `python-version`); `requires-python` remains `>=3.10`
+- Upgrade `symspellpy` from 6.9.0 to 6.10.1 and declare the `editdistpy` extra (`editdistpy` now resolves to 0.5.0), pinning `DistanceAlgorithm.DAMERAU_OSA_FAST` explicitly at both `SymSpell` construction sites (6.10.x switched the default to the pure-Python comparer)
+
 ## [0.1.0a10] - 2026-11-01
 
 ### Added

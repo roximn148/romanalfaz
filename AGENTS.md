@@ -25,7 +25,7 @@ The package exposes a single public entry point: the `RomanAlfaz` class.
 
 ## Environment & Commands
 
-- Python 3.10+ (`.python-version` pins 3.10); the project uses **uv** as the package manager.
+- Python 3.10+ (`.python-version` pins 3.13); the project uses **uv** as the package manager.
 - Setup: `uv sync` (installs runtime + dev dependencies; dev group contains pytest, sphinx, myst-nb).
 - Run tests: `uv run pytest` (quick: `uv run pytest -q`).
 - Build docs locally: `cd docs && make html` (Sphinx; output in `docs/_build/`).
