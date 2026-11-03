@@ -360,6 +360,21 @@ class TestRomanAlfaz:
             RomanAlfaz()
         assert calls == [1]
 
+    def testFastDistanceComparerPinned(self):
+        """RomanAlfaz keeps the fast editdistpy-backed Damerau-Osa comparer.
+
+        symspellpy 6.9.0 defaults to it; 6.10.x switched the default to the
+        pure-Python DAMERAU_OSA, so the engine pins the fast algorithm
+        explicitly at both SymSpell construction sites.
+        """
+        from symspellpy.editdistance import DamerauOsaFast, EditDistance
+
+        ra = RomanAlfaz()
+        assert isinstance(ra.symSpell.distance_comparer, EditDistance)
+        assert isinstance(ra.symSpell.distance_comparer._distance_comparer, DamerauOsaFast)
+        # Exercise a lookup so the lazy editdistpy import runs.
+        assert ra.getBestMatch("kitab").arabic == "کتاب"
+
     def testAddVocabularyUpdatesStateAndSumsCollisions(self):
         """Verify that adding new vocabularies triggers compilation and combines frequencies."""
         v1 = Vocabulary({"دنیا": 10, "وزیر": 5})

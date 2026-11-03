@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 from symspellpy import SymSpell, Verbosity
+from symspellpy.editdistance import DistanceAlgorithm, EditDistance
 from symspellpy.suggest_item import SuggestItem
 
 from .algorithm import tafseerUrduAr2Rm, tafseerUrduRm2Rm
@@ -365,7 +366,7 @@ class RomanAlfaz:
                 empty list yields an engine with no vocabularies.
         """
         # Initialize the underlying SymSpell engine used for edit-distance algorithms.
-        self.symSpell = SymSpell()
+        self.symSpell = SymSpell(distance_comparer=EditDistance(DistanceAlgorithm.DAMERAU_OSA_FAST))
 
         # Create a many-to-many mapping structure (specifically, a dictionary of sets)
         # designed to handle cases where multiple arabic-script words might share
@@ -496,7 +497,7 @@ class RomanAlfaz:
         # Populate brand-new engine structures rather than wiping the live ones,
         # so a failed build leaves the previously compiled state intact
         # (dead records are discarded wholesale when the fresh engines commit).
-        freshSymSpell = SymSpell()
+        freshSymSpell = SymSpell(distance_comparer=EditDistance(DistanceAlgorithm.DAMERAU_OSA_FAST))
         freshReverseMapping: defaultdict[str, set[tuple[str, int]]] = defaultdict(set)
         freshArabicWords: set[str] = set()
         freshMinRomanWordLength: int | None = None
