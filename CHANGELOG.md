@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
-## [Unreleased]
+## [0.1.0a11] - 2026-11-04
 
 ### Changed
 - Bump development Python from 3.10 to 3.13 (`.python-version`, ruff `target-version`, pyrefly `python-version`); `requires-python` remains `>=3.10`
