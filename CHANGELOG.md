@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+### Fixed
+- Derive the docs `release` string in `docs/conf.py` from the installed package metadata instead of a hardcoded value, so the documentation title reflects the actual version
+
 ## [0.1.0a12] - 2026-11-04
 
 ### Changed

@@ -4,6 +4,7 @@
 # LICENSE.txt file in the root directory of this source tree.
 # ******************************************************************************
 import sys
+from importlib import metadata
 from pathlib import Path
 
 # Source code Path -------------------------------------------------------------
@@ -15,7 +16,7 @@ sys.path.insert(0, str(Path("..", "src").resolve()))
 project = "Roman Alfaz"
 copyright = "2026, RoXimn. Licensed under the MIT license"
 author = "RoXimn"
-release = "0.1.0a8"
+release = metadata.version("romanalfaz")
 
 # General configuration --------------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
