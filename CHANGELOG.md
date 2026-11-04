@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [Unreleased]
+
+### Changed
+- Bump development dependency floors: `pytest` 9.0.3 → 9.2.0, `ruff` 0.17.1 → 0.17.3, `sphinx` 8.1.3 → 9.2.0 (all three are bug-fix/minor releases with no breaking changes for this project)
+- Relax the build backend pin from `uv_build>=0.11.14,<0.12.0` to `uv_build>=0.13.7,<0.14.0`
+- Resolve all 61 pre-existing `ruff` findings (line-length wraps, explicit `strict=False` on `zip()` calls, exception chaining); no behavioral changes
+
 ## [0.1.0a11] - 2026-11-04
 
 ### Changed

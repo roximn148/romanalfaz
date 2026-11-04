@@ -1,5 +1,7 @@
 # ******************************************************************************
-# Copyright (c) 2026 RoXimn <roximn148@gmail.com> Licensed under the MIT License
+# Copyright (c) 2026 RoXimn <roximn148@gmail.com>
+# This source code is licensed under the MIT license found in the
+# LICENSE.txt file in the root directory of this source tree.
 # ******************************************************************************
 import os
 import subprocess
@@ -163,7 +165,8 @@ class TestNormalizeCommand(SymFileFixture):
     def testRejectsPreviewWithTarget(self, symFile, tmp_path):
         """--preview cannot be combined with a write target."""
         with pytest.raises(SystemExit) as excinfo:
-            main(["normalize", str(symFile("\u0628$2\n")), "-o", str(tmp_path / "o.sym"), "--preview"])
+            previewTarget = str(tmp_path / "o.sym")
+            main(["normalize", str(symFile("\u0628$2\n")), "-o", previewTarget, "--preview"])
         assert excinfo.value.code == 2
 
 

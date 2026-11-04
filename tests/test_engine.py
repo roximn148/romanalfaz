@@ -1,5 +1,7 @@
 # ******************************************************************************
-# Copyright (c) 2026 RoXimn <roximn148@gmail.com> Licensed under the MIT License
+# Copyright (c) 2026 RoXimn <roximn148@gmail.com>
+# This source code is licensed under the MIT license found in the
+# LICENSE.txt file in the root directory of this source tree.
 # ******************************************************************************
 from unittest.mock import mock_open, patch
 
@@ -12,7 +14,8 @@ from romanalfaz.engine import RomanAlfaz, Suggestion, Vocabulary
 class TestVocabulary:
     @pytest.fixture
     def populatedVocabulary(self):
-        """Custom fixture for generating a reusable Vocabulary instance with mixed characters (لاطینی and اردو)."""
+        """Custom fixture for generating a reusable Vocabulary instance
+        with mixed characters (لاطینی and اردو)."""
         data = {"کتاب": 15, "library": 25, "مکس!data": 5}
         v = Vocabulary(data)
         v.setCompleted("کتاب", True)
@@ -20,14 +23,16 @@ class TestVocabulary:
         return v
 
     def testFixtureIntegrity(self, populatedVocabulary):
-        """Validates the structure and metrics coverage of the custom populated vocabulary fixture."""
+        """Validates the structure and metrics coverage of the custom
+        populated vocabulary fixture."""
         assert populatedVocabulary.counter["library"] == 25
         assert "کتاب" in populatedVocabulary.completed
         assert "مکس!data" not in populatedVocabulary.completed
 
     @pytest.fixture
     def mockFileData(self):
-        """Custom fixture providing raw file storage data mimicking a saved SymSpell configuration file."""
+        """Custom fixture providing raw file storage data mimicking a
+        saved SymSpell configuration file."""
         return "ٹیسٹ$50\ntest_word$100\n"
 
     def testInitEmpty(self):
@@ -37,7 +42,8 @@ class TestVocabulary:
         assert len(v.completed) == 0
 
     def testInitWithData(self):
-        """Initializes vocabulary directly with a dictionary holding mixed characters (کتاب, data!)."""
+        """Initializes vocabulary directly with a dictionary holding
+        mixed characters (کتاب, data!)."""
         initData = {"کتاب": 5, "computer": 12, "punctuation!": 1}
         v = Vocabulary(initData)
         assert v.counter["کتاب"] == 5
@@ -45,7 +51,8 @@ class TestVocabulary:
         assert v.counter["punctuation!"] == 1
 
     def testAddValidWords(self):
-        """Adds valid words to check standard frequency accumulation with mixed characters like 'اردو'."""
+        """Adds valid words to check standard frequency accumulation
+        with mixed characters like 'اردو'."""
         v = Vocabulary()
         v.add("python")
         v.add("اردو", 3)
@@ -54,7 +61,8 @@ class TestVocabulary:
         assert v.counter["اردو"] == 3
 
     def testAddInvalidInputs(self):
-        """Checks assertion errors for invalid inputs during initialization or adding (خالی str, negative integers)."""
+        """Checks assertion errors for invalid inputs during
+        initialization or adding (خالی str, negative integers)."""
         v = Vocabulary()
         with pytest.raises(AssertionError):
             v.add("")  # Empty str handle نہیں ہوتی
@@ -90,7 +98,8 @@ class TestVocabulary:
         v.remove("missing_ورڈ")
 
     def testReplaceWord(self):
-        """Swaps an old entry with a new terminology preserving frequency and completion setup ('غلطی' to 'درست')."""
+        """Swaps an old entry with a new terminology preserving
+        frequency and completion setup ('غلطی' to 'درست')."""
         v = Vocabulary({"غلطی": 10, "correct": 5})
         v.setCompleted("غلطی", True)
 
@@ -110,7 +119,8 @@ class TestVocabulary:
         assert "ٹیسٹ" not in v.completed
 
     def testSaveAndLoad(self, tmp_path):
-        """Saves and loads data utilizing custom separator characters ($) to handle file operations safely."""
+        """Saves and loads data utilizing custom separator characters
+        ($) to handle file operations safely."""
         filepath = tmp_path / "SaveAndLoadVocab.txt"
         v = Vocabulary()
         v.add("سلام", 5)
@@ -131,7 +141,8 @@ class TestVocabulary:
         assert "hello" in loadedV.completed
 
     def testSaveSortingOrder(self, tmp_path):
-        """Verifies that items saved to the storage file are ordered accurately from high to low counts."""
+        """Verifies that items saved to the storage file are ordered
+        accurately from high to low counts."""
         filepath = tmp_path / "SaveSortingOrder.txt"
         v = Vocabulary()
         v.add("کم", 2)
@@ -141,7 +152,7 @@ class TestVocabulary:
 
         v.save(str(filepath), sep="#")
 
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             lines = f.readlines()
 
         assert "زیادہ#20" in lines[0]
@@ -149,7 +160,8 @@ class TestVocabulary:
 
     @patch("builtins.open", new_callable=mock_open)
     def testSaveFileIoError(self, mockFile, populatedVocabulary):
-        """Mocks file open behavior to simulate OS write faults and exceptions during file export operations."""
+        """Mocks file open behavior to simulate OS write faults and
+        exceptions during file export operations."""
         mockFile.side_effect = OSError("Disk Full Error")
 
         with pytest.raises(IOError) as excInfo:
@@ -160,14 +172,16 @@ class TestVocabulary:
 
     @patch("builtins.open")
     def testLoadMissingFileException(self, mockFile):
-        """Mocks file reading to verify that FileNotFoundError behavior functions normally when loading records."""
+        """Mocks file reading to verify that FileNotFoundError
+        behavior functions normally when loading records."""
         mockFile.side_effect = FileNotFoundError("File not found")
 
         with pytest.raises(FileNotFoundError):
             Vocabulary.load("unknown.txt")
 
     def testBoundarySeparatorsAndCoverage(self, populatedVocabulary, tmp_path):
-        """Increases coverage metrics by evaluating multi-character words containing edge case punctuation markers."""
+        """Increases coverage metrics by evaluating multi-character
+        words containing edge case punctuation markers."""
         filepath = tmp_path / "edgeCase.txt"
 
         # Edge cases: words containing structural delimiter components inside the string sequence
@@ -312,13 +326,15 @@ class TestSuggestion:
         assert blank.isUndefined()
 
     def testPartialConstructionFillsRemainingDefaults(self):
-        """Verify that constructing with a single field leaves the remaining fields at their defaults."""
+        """Verify that constructing with a single field leaves the
+        remaining fields at their defaults."""
         s = Suggestion(arabic="کتاب")
         assert s.encodedRoman == ""
         assert s.frequency == 0
 
     def testIsUndefinedWhenArabicEmptyOrFrequencyZero(self):
-        """Verify isUndefined is True when arabic is empty or frequency is zero, and False only when both are set."""
+        """Verify isUndefined is True when arabic is empty or
+        frequency is zero, and False only when both are set."""
         assert Suggestion().isUndefined()
         assert Suggestion(arabic="کتاب").isUndefined()
         assert Suggestion(frequency=1).isUndefined()
@@ -389,7 +405,8 @@ class TestRomanAlfaz:
         # Dynamically inject second vocabulary
         ra.addVocabulary(v2)
 
-        # Ensure dynamic compilation combined fields and solved word collisions by summing frequencies
+        # Ensure dynamic compilation combined fields and solved word
+        # collisions by summing frequencies
         assert len(ra.vocabularies) == 2
         assert ra.symSpell.words["DNYA"] == 15  # 10 + 5
         assert ra.symSpell.words["WZYR"] == 5
@@ -463,7 +480,8 @@ class TestRomanAlfaz:
 
 
     def testHomonymCollisionMergingInReverseMapping(self):
-        """Verify that multiple different Arabic words resolving to the same Roman key merge correctly."""
+        """Verify that multiple different Arabic words resolving
+        to the same Roman key merge correctly."""
         # Imagine 'wordA' and 'wordB' map to identical Roman stems via simulated function overrides
         v1 = Vocabulary({"کرون": 10})
         v2 = Vocabulary({"کروں": 20, "کرون": 5})
@@ -501,7 +519,8 @@ class TestRomanAlfaz:
         assert ra.hasWord("كتاﺐ") is True
 
     def testHasWordToleratesDiacriticsAndTatweel(self):
-        """Verify that input differing from the stored word only in diacritics or tatweel is still present."""
+        """Verify that input differing from the stored word only in
+        diacritics or tatweel is still present."""
         ra = RomanAlfaz([Vocabulary({"محمد": 10})])
 
         # Arabic vocalization marks are stripped during normalization

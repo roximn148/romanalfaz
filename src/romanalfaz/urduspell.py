@@ -1,7 +1,7 @@
 # ******************************************************************************
-#    Copyright (c) 2026 RoXimn <roximn148@gmail.com>
-#    This source code is licensed under the MIT license found in the
-#    LICENSE.txt file in the root directory of this source tree.
+# Copyright (c) 2026 RoXimn <roximn148@gmail.com>
+# This source code is licensed under the MIT license found in the
+# LICENSE.txt file in the root directory of this source tree.
 # ******************************************************************************
 """
 The :py:mod:`romanalfaz.urduspell` module is the ``urdu-spell`` normalization
@@ -426,15 +426,16 @@ URDU_VARIANT_MAP: dict[str, list[str]] = {
 """
 Urdu Unicode base characters map to their positional and combinational variants.
 
-This mapping defines which characters are retained during text normalization for processing, 
-effectively filtering out visual representations.
+This mapping defines which characters are retained during text normalization
+for processing, effectively filtering out visual representations.
 """
 
 # LIGATURE MAP START
 LIGATURE_MAP: dict[str, str] = {
     "\ufefb": "\u0644\u0627",  # ARABIC LIGATURE LAM WITH ALEF ISOLATED FORM -> ل + ا
     "\ufefc": "\u0644\u0627",  # ARABIC LIGATURE LAM WITH ALEF FINAL FORM -> ل + ا
-    "\ufef5": "\u0644\u0622",  # ARABIC LIGATURE LAM WITH ALEF WITH MADDA ABOVE ISOLATED FORM -> ل + آ
+    # ARABIC LIGATURE LAM WITH ALEF WITH MADDA ABOVE ISOLATED FORM -> ل + آ
+    "\ufef5": "\u0644\u0622",
     "\ufef6": "\u0644\u0622",  # ARABIC LIGATURE LAM WITH ALEF WITH MADDA ABOVE FINAL FORM -> ل + آ
 }
 # LIGATURE MAP END
@@ -460,7 +461,8 @@ def normalize(text: str) -> str:
 
     1. Strips leading/trailing whitespace using :py:func:`strip`.
     2. Normalizes specific characters via :py:func:`romanalfaz.urduspell.normalizeUrduChars`.
-    3. Removes non-alphanumeric marks, digits, and punctuation via :py:func:`romanalfaz.urduspell.removeNonLetterChars`.
+    3. Removes non-alphanumeric marks, digits, and punctuation via
+       :py:func:`romanalfaz.urduspell.removeNonLetterChars`.
     4. Finally, normalizes all internal whitespace sequences to a single `space` using
        :py:func:`romanalfaz.urduspell.normalizeWhiteSpace`.
 
@@ -507,19 +509,21 @@ def normalize(text: str) -> str:
         - U+0624 (cross-dialect base): folded to U+0648 only by the maps;
           :py:func:`romanalfaz.urduspell.removeMarks` leaves it unchanged.
 
-        +------------------------------+-----------------------+---------------------------+---------------+
-        | Input                        | `removeMarks` only    | `normalizeUrduChars` only | `normalize`   |
-        +==============================+=======================+===========================+===============+
-        | U+FE8F (positional form)     | U+FE8F (unchanged)    | U+0628 (folded)           | U+0628        |
-        +------------------------------+-----------------------+---------------------------+---------------+
-        | U+FEFB (ligature)            | U+FEFB (unchanged)    | U+0644 U+0627 (folded)    | U+0644 U+0627 |
-        +------------------------------+-----------------------+---------------------------+---------------+
-        | U+0628 U+064E (base + fatha) | U+0628 (mark removed) | U+0628 U+064E (unchanged) | U+0628        |
-        +------------------------------+-----------------------+---------------------------+---------------+
-        | U+0622 (precomposed)         | U+0622 (no-op)        | U+0622 (no-op)            | U+0622        |
-        +------------------------------+-----------------------+---------------------------+---------------+
-        | U+0624 (cross-dialect)       | U+0624 (no-op)        | U+0648 (folded)           | U+0648        |
-        +------------------------------+-----------------------+---------------------------+---------------+
+        +--------------------------+--------------------+---------------------------+-------------+
+        | Input                    | `removeMarks` only | `normalizeUrduChars` only | `normalize` |
+        +==========================+====================+===========================+=============+
+        | U+FE8F (positional form) | U+FE8F (unchanged) | U+0628 (folded)           | U+0628      |
+        +--------------------------+--------------------+---------------------------+-------------+
+        | U+FEFB (ligature)        | U+FEFB (unchanged) | U+0644 U+0627 (folded)    | U+0644      |
+        |                          |                    |                           | U+0627      |
+        +--------------------------+--------------------+---------------------------+-------------+
+        | U+0628 U+064E            | U+0628             | U+0628 U+064E (unchanged) | U+0628      |
+        | (base + fatha)           | (mark removed)     |                           |             |
+        +--------------------------+--------------------+---------------------------+-------------+
+        | U+0622 (precomposed)     | U+0622 (no-op)     | U+0622 (no-op)            | U+0622      |
+        +--------------------------+--------------------+---------------------------+-------------+
+        | U+0624 (cross-dialect)   | U+0624 (no-op)     | U+0648 (folded)           | U+0648      |
+        +--------------------------+--------------------+---------------------------+-------------+
 
         The division of labor above rests on an exact fit: the marks preserved by
         :py:func:`romanalfaz.urduspell.removeMarks` (U+0653 and U+0654) are exactly the
@@ -571,7 +575,8 @@ def normalizeUrduChars(text: str) -> str:
     This function processes input text to handle:
 
       #. Ligature presentation forms (single characters that render as a ligature, e.g., lam-alef).
-      #. Positional variants (initial, medial, final, isolated forms) mapped back to base characters.
+      #. Positional variants (initial, medial, final, isolated forms)
+         mapped back to base characters.
       #. Cross-dialect base characters, e.g., U+0624 (WAW WITH HAMZA ABOVE) folded to U+0648 (WAW).
 
     The output is a string containing only the standard base Urdu characters.
@@ -706,9 +711,7 @@ def removeNonLetterChars(text: str) -> str:
     cleanedText = removeMarks(text)
 
     # Step 2: Remove Digits, Punctuation (P), Symbols (S), and Control chars (C).
-    return "".join(
-        [c for c in cleanedText if not ud.category(c).startswith(("C", "P", "S", "Nd"))]
-    )
+    return "".join([c for c in cleanedText if not ud.category(c).startswith(("C", "P", "S", "Nd"))])
 
 
 # ******************************************************************************

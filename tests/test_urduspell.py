@@ -1,5 +1,7 @@
 # ******************************************************************************
-# Copyright (c) 2026 RoXimn <roximn148@gmail.com> Licensed under the MIT License
+# Copyright (c) 2026 RoXimn <roximn148@gmail.com>
+# This source code is licensed under the MIT license found in the
+# LICENSE.txt file in the root directory of this source tree.
 # ******************************************************************************
 import unicodedata
 
@@ -64,7 +66,8 @@ class TestRemoveMarks:
         assert removeMarks(inputText) == expectedOutput
 
     def testMixedScriptChaos(self):
-        """Test a highly mixed string with Latin, Urdu, symbols, numbers, and multiple diacritics."""
+        """Test a highly mixed string with Latin, Urdu, symbols, numbers,
+        and multiple diacritics."""
         # 'بَ' (ba + fatha -> remove fatha), 'آ' (keep), Latin symbols, 'é' (remove accent)
         inputText = "بَ !@# 123 آ café"
         expectedOutput = "ب !@# 123 آ cafe"
@@ -106,7 +109,8 @@ class TestNormalizeNonChars:
         assert removeNonLetterChars(inputText) == expectedOutput
 
     def testDiacriticsRemovedExceptPreserved(self):
-        """Test that standard Urdu/Latin diacritics are stripped, while structural marks (Madda) remain."""
+        """Test that standard Urdu/Latin diacritics are stripped, while
+        structural marks (Madda) remain."""
         # مُحَمَّدٌ (contains standard diacritics to remove) and قرآن (contains Madda to preserve)
         inputText = "\u0645\u064f\u062d\u064e\u0645\u0651\u064e\u062f\u064c قرآن café"
         expectedOutput = "محمد قرآن cafe"
@@ -119,7 +123,8 @@ class TestNormalizeNonChars:
         assert removeNonLetterChars(inputText) == expectedOutput
 
     def testWhitespacePreservation(self):
-        """Test that standard spaces are preserved while consecutive punctuation separation leaves clean spaces."""
+        """Test that standard spaces are preserved while consecutive
+        punctuation separation leaves clean spaces."""
         inputText = "Word1,,,   Word2!!!   لفظ۳"
         expectedOutput = "Word   Word   لفظ"
         assert removeNonLetterChars(inputText) == expectedOutput
@@ -150,7 +155,8 @@ class TestNormalizeUrduChars:
         assert normalizeUrduChars("") == ""
 
     def testStandardTextRemainsUnchanged(self):
-        """Test that standard Urdu text without ligatures or positional variants remains untouched."""
+        """Test that standard Urdu text without ligatures or
+        positional variants remains untouched."""
         # This test verifies behavior against the existing map contents
         text = "یہ ایک سادہ جملہ ہے۔"
         # The output should equal input if input contains no elements present in the maps
@@ -162,7 +168,8 @@ class TestNormalizeUrduChars:
         assert normalizeUrduChars(text) == text
 
     def testMultiCharacterLigaturesReplaced(self):
-        """Test that keys present in LIGATURE_MAP are replaced by their mapped values if found in the input."""
+        """Test that keys present in LIGATURE_MAP are replaced by
+        their mapped values if found in the input."""
         # We use a conditional check to find an available key from the pre-defined LIGATURE_MAP
         if LIGATURE_MAP:
             testLigature = next(iter(LIGATURE_MAP))
@@ -175,8 +182,10 @@ class TestNormalizeUrduChars:
             pytest.skip("LIGATURE_MAP is empty, skipping dynamic evaluation.")
 
     def testPositionalVariantsReversed(self):
-        """Test that keys present in URDU_VARIANT_REVERSAL_MAP are mapped back to their base forms."""
-        # We use a conditional check to find an available key from the pre-defined URDU_VARIANT_REVERSAL_MAP
+        """Test that keys present in URDU_VARIANT_REVERSAL_MAP are
+        mapped back to their base forms."""
+        # We use a conditional check to find an available key from
+        # the pre-defined URDU_VARIANT_REVERSAL_MAP
         if URDU_VARIANT_REVERSAL_MAP:
             testVariant = next(iter(URDU_VARIANT_REVERSAL_MAP))
             expectedBase = URDU_VARIANT_REVERSAL_MAP[testVariant]
@@ -188,11 +197,13 @@ class TestNormalizeUrduChars:
             pytest.skip("URDU_VARIANT_REVERSAL_MAP is empty, skipping dynamic evaluation.")
 
     def testMixedChaosLigaturesVariantsAndLatin(self):
-        """Test a chaotic string mixing Latin elements, digits, and elements from both maps if populated."""
+        """Test a chaotic string mixing Latin elements, digits, and
+        elements from both maps if populated."""
         inputText = "Urdu ٹیکسٹ 123 !@#"
         expectedOutput = "Urdu ٹیکسٹ 123 !@#"
 
-        # Dynamically inject one item from each dictionary into the text to run a combined simulation
+        # Dynamically inject one item from each dictionary into the
+        # text to run a combined simulation
         if LIGATURE_MAP:
             ligatureKey = next(iter(LIGATURE_MAP))
             inputText += f" {ligatureKey}"
@@ -206,7 +217,8 @@ class TestNormalizeUrduChars:
         assert normalizeUrduChars(inputText) == expectedOutput
 
     def testFixedCodepointsNormalizeToBase(self):
-        """Test that every form repaired by the variant map corrections normalizes to its base character."""
+        """Test that every form repaired by the variant map
+        corrections normalizes to its base character."""
         # The table pins the repaired forms: HEH DOACHASHMEE -> ھ, FARSI YEH -> ی
         # (including the ALEF MAKSURA cross-map, which resolves to ی by design),
         # HEH GOAL / HEH WITH YEH ABOVE -> ہ, YEH BARREE and YEH BARREE WITH
@@ -354,7 +366,8 @@ class TestUrduVariantMap:
             )
 
     def testCrossMapsMatchIntentionalAllowlist(self):
-        """Test that foreign codepoints listed under a base are exactly the intentional cross-map set."""
+        """Test that foreign codepoints listed under a base are
+        exactly the intentional cross-map set."""
         expectedCrossMaps = {
             # URDU KAF (ک): Arabic KAF and forms, Old Persian GUEH and forms
             "\u06a9": {

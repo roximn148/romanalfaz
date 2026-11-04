@@ -1,11 +1,11 @@
 # ******************************************************************************
-#    Copyright (c) 2026 RoXimn <roximn148@gmail.com>
-#    This source code is licensed under the MIT license found in the
-#    LICENSE.txt file in the root directory of this source tree.
+# Copyright (c) 2026 RoXimn <roximn148@gmail.com>
+# This source code is licensed under the MIT license found in the
+# LICENSE.txt file in the root directory of this source tree.
 # ******************************************************************************
 """
-The :py:mod:`romanalfaz.engine` module contains the transliteration implementation logic for the romanalfaz
-package.
+The :py:mod:`romanalfaz.engine` module contains the transliteration implementation logic
+for the romanalfaz package.
 """
 
 # ******************************************************************************
@@ -205,7 +205,7 @@ class Vocabulary:
 
         with open(filename, "w", encoding="utf-8") as sym:
             # Iterate through most common words to ensure high-frequency items come first
-            for i, (w, f) in enumerate(self.counter.most_common()):
+            for w, f in self.counter.most_common():
                 if w in self.completed:
                     sym.write(f"{w}{sep}{f}\n")
 
@@ -231,7 +231,7 @@ class Vocabulary:
         assert not sep.isdigit(), "Seperator cannot be a digit"
 
         newVocab = cls()
-        with open(filename, "r", encoding="utf-8") as f:
+        with open(filename, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -410,7 +410,7 @@ class RomanAlfaz:
             try:
                 vocab = Vocabulary.load(getDefaultWordsFilename())
             except (OSError, ValueError) as e:
-                raise DictionaryNotFoundError(e)
+                raise DictionaryNotFoundError(e) from e
             else:
                 self.addVocabulary(vocab)
 

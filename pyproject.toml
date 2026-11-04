@@ -4,22 +4,20 @@ version = "0.1.0a11"
 description = "Dictionary based predictive Roman Urdu transliterator"
 
 readme = "README.md"
-license = { file = "LICENSE.txt" }
+license = "MIT"
+license-files = ["LICENSE.txt"]
 authors = [
-    { name = "roximn", email = "roximn148@gmail.com" }
+    { name = "RoXimn", email = "roximn148@gmail.com" }
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3 :: Only",
 ]
 
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 dependencies = [
     "symspellpy[editdistpy]>=6.10.1",
     "unicodedataplus>=16.0.0.post1",
@@ -30,14 +28,19 @@ romanalfaz = "romanalfaz.cli:main"
 dev = [
     "myst-nb>=1.4.0",
     "pyrefly>=1.4.0",
-    "pytest>=9.0.3",
-    "ruff>=0.17.1",
-    "sphinx>=8.1.3",
+    "pytest>=9.2.0",
+    "ruff>=0.17.3",
+    "sphinx>=9.2.0",
     "sphinx-rtd-theme>=3.1.0",
 ]
 
 [tool.ruff]
+line-length = 100
 target-version = "py313"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["romanalfaz"]
@@ -45,9 +48,10 @@ known-first-party = ["romanalfaz"]
 [tool.pyrefly]
 preset = "basic"
 python-version = "3.13"
+project-includes = ["src", "tests"]
 # unicodedataplus is a compiled C extension (.pyd) without type stubs
 ignore-missing-imports = ["unicodedataplus"]
 
 [build-system]
-requires = ["uv_build>=0.11.14,<0.12.0"]
+requires = ["uv_build>=0.13.7,<0.14.0"]
 build-backend = "uv_build"

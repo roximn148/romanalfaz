@@ -4,8 +4,8 @@
 # LICENSE.txt file in the root directory of this source tree.
 # ******************************************************************************
 """
-The :py:mod:`romanalfaz.algorithm` module contains the Urdu language roman-to-arabic script transliteration
-algorithm and its helper functions.
+The :py:mod:`romanalfaz.algorithm` module contains the Urdu language roman-to-arabic
+script transliteration algorithm and its helper functions.
 """
 
 # ******************************************************************************
@@ -229,7 +229,8 @@ def tafseerUrduRm2Rm(word: str) -> set[str]:
 
     This function addresses common transliteration inconsistencies caused by:
 
-    #. The absence of vowels in standard arabic-script writing (leading to ambiguous consonant clusters).
+    #. The absence of vowels in standard arabic-script writing (leading to ambiguous
+       consonant clusters).
     #. Multiple distinct Arabic consonants that map to the same Roman letter (e.g., 'kaf' vs 'qaf').
 
     It executes a 12-step sequential algorithm designed to resolve these ambiguities,
@@ -703,7 +704,9 @@ def findVowelCombos(token: str) -> list[list[str]]:
             if len(remainingText) >= 2:
                 chunkTwo = remainingText[:2]
                 if chunkTwo in vowelsSet:
-                    breakdowns.extend((chunkTwo, *path) for path in findCombinations(remainingText[2:]))
+                    breakdowns.extend(
+                        (chunkTwo, *path) for path in findCombinations(remainingText[2:])
+                    )
 
         memo[remainingText] = breakdowns
         return breakdowns
@@ -743,7 +746,9 @@ def concatenateCombos(
     # Generate all Cartesian product combinations of separators with replacement
     return [
         subStrings[0] + "".join(
-            separator + segment for separator, segment in zip(currentCombo, subStrings[1:])
+            separator + segment for separator, segment in zip(
+                currentCombo, subStrings[1:], strict=False
+            )
         )
         for currentCombo in itertools.product(charset, repeat=separatorCount)
     ]
@@ -804,7 +809,9 @@ def permuteConsecutiveVowels(inList: list[str]) -> list[str]:
             # Reconstruct the token by replacing the match span with each variation
             for uniqueVowelVariation in vowelComboOutput:
                 spanStart, spanEnd = activeMatch.span()
-                reconstructedWord = f"{activeToken[:spanStart]}{uniqueVowelVariation}{activeToken[spanEnd:]}"
+                reconstructedWord = (
+                    f"{activeToken[:spanStart]}{uniqueVowelVariation}{activeToken[spanEnd:]}"
+                )
                 wordLevelOutput.append(reconstructedWord)
 
         # Append generated variants, or fallback to the original token if no match occurred
