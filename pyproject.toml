@@ -22,8 +22,14 @@ dependencies = [
     "symspellpy[editdistpy]>=6.10.1",
     "unicodedataplus>=16.0.0.post1",
 ]
+
 [project.scripts]
 romanalfaz = "romanalfaz.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.13.7,<0.14.0"]
+build-backend = "uv_build"
+
 [dependency-groups]
 dev = [
     "myst-nb>=1.4.0",
@@ -52,6 +58,6 @@ project-includes = ["src", "tests"]
 # unicodedataplus is a compiled C extension (.pyd) without type stubs
 ignore-missing-imports = ["unicodedataplus"]
 
-[build-system]
-requires = ["uv_build>=0.13.7,<0.14.0"]
-build-backend = "uv_build"
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
