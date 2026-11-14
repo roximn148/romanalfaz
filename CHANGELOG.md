@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ### Changed
 - Declare pytest configuration in `pyproject.toml` (`testpaths`, `pythonpath`)
+- `LIGATURE_MAP` in `romanalfaz.urduspell` now covers the full Arabic
+  presentation-form ligature set: the table is built at import time from the
+  Unicode decomposition fields (`unicodedata` 16.0.0 data via
+  `unicodedataplus`) instead of the hand-written 4-entry lam-alef map, and
+  `normalizeUrduChars` applies it in a single `str.translate` pass. Of the 494
+  ligature codepoints in U+FB50-FDFF / U+FE70-FEFF, 448 decompose to their
+  base-character sequences (mark-bearing ligatures keep their combining marks
+  but drop the decomposition's U+0020/U+0640, so no space or tatweel is
+  emitted), 32 honorific/phrase ligatures (U+FD40-FD4F, U+FDCF, U+FDF0-FDFB,
+  U+FDFD-FDFF) map to `""` and are stripped, and 14 non-Urdu ligatures
+  (U+FBEC-FBED, U+FBF0-FBFB, the Uyghur/Kazakh/Kirghiz series) are excluded
+  and pass through untouched. U+FDFC (RIAL SIGN, not a ligature) has no entry.
+- `URDU_VARIANT_MAP` gains one sanctioned exception enabling full lam-alef
+  coverage: bare U+0623 (ALEF WITH HAMZA ABOVE) and U+0625 (ALEF WITH HAMZA
+  BELOW) fold to U+0627, so all eight U+FEF5-FEFC ligatures normalize to
+  `لا` or `لآ`. The fold consumes the hamza (U+0655) before marks are
+  considered, so `PRESERVED_MARKS` remains exactly {U+0653, U+0654}
 
 ### Fixed
 - Derive the docs `release` string in `docs/conf.py` from the installed package metadata instead of a hardcoded value, so the documentation title reflects the actual version

@@ -8,9 +8,13 @@ import unicodedata
 import pytest
 
 from romanalfaz.urduspell import (
+    LIGATURE_DELETED,
+    LIGATURE_EXCLUDED,
     LIGATURE_MAP,
+    PRESERVED_MARKS,
     URDU_VARIANT_MAP,
     URDU_VARIANT_REVERSAL_MAP,
+    normalize,
     normalizeUrduChars,
     removeMarks,
     removeNonLetterChars,
@@ -385,6 +389,9 @@ class TestUrduVariantMap:
             },
             # TEH MARBUTA GOAL (ۃ): Arabic TEH MARBUTA and forms
             "\u06c3": {"\u0629", "\ufe93", "\ufe94"},
+            # ALIF (ا): the sanctioned ALEF WITH HAMZA ABOVE/BELOW exception
+            # enabling full lam-alef ligature coverage (U+FEF7-U+FEFA)
+            "\u0627": {"\u0623", "\u0625"},
             # FARSI YEH (ی): Arabic YEH and forms, ALEF MAKSURA and forms
             "\u06cc": {
                 "\u064a", "\ufef1", "\ufef2", "\ufef3", "\ufef4",
@@ -433,17 +440,177 @@ class TestLigatureMap:
             assert isinstance(ligature, str)
             assert len(ligature) == 1, f"ligature key {ligature!r} must be a single codepoint"
 
-    def testValuesAreSequencesOfBaseCharacters(self):
-        """Test that every character in every replacement is a base key of URDU_VARIANT_MAP."""
+    def testValuesAreBaseCharsCombiningMarksOrEmpty(self):
+        """Test that every replacement character folds to a base character
+        (via URDU_VARIANT_REVERSAL_MAP) or is a combining mark that
+        removeMarks strips downstream, and that deleted ligatures map to ''."""
         for ligature, replacement in LIGATURE_MAP.items():
+            if ligature in LIGATURE_DELETED:
+                assert replacement == "", (
+                    f"deleted ligature {ligature!r} (U+{ord(ligature):04X}) must map to ''"
+                )
+                continue
             assert replacement, (
                 f"replacement for {ligature!r} (U+{ord(ligature):04X}) must not be empty"
             )
             for char in replacement:
-                assert char in URDU_VARIANT_MAP, (
+                assert char in URDU_VARIANT_REVERSAL_MAP or unicodedata.combining(char) > 0, (
                     f"{char!r} (U+{ord(char):04X}) in the replacement for "
-                    f"{ligature!r} (U+{ord(ligature):04X}) is not a URDU_VARIANT_MAP base key"
+                    f"{ligature!r} (U+{ord(ligature):04X}) is neither a variant-map "
+                    f"codepoint nor a combining mark"
                 )
+
+    def testNoSpaceOrTatweelInAnyValue(self):
+        """Test that no replacement emits U+0020 (SPACE) or U+0640 (TATWEEL):
+        a space or tatweel inside a word would split it for lookup."""
+        for ligature, replacement in LIGATURE_MAP.items():
+            assert " " not in replacement, (
+                f"replacement for {ligature!r} (U+{ord(ligature):04X}) contains U+0020"
+            )
+            assert "\u0640" not in replacement, (
+                f"replacement for {ligature!r} (U+{ord(ligature):04X}) contains U+0640"
+            )
+
+
+# ******************************************************************************
+# Presentation-form helpers for the ligature coverage tests below. The
+# ligature codepoints are the assigned characters of the two presentation
+# blocks whose official Unicode names contain LIGATURE.
+
+
+def ligatureCodepoints():
+    """Return the sorted codepoints of every assigned ligature character
+    in the two Arabic presentation-form blocks."""
+    codepoints = []
+    for low, high in PRESENTATION_BLOCKS:
+        for codepoint in range(low, high + 1):
+            name = officialName(chr(codepoint))
+            if name and "LIGATURE" in name:
+                codepoints.append(codepoint)
+    return codepoints
+
+
+# ******************************************************************************
+class TestLigatureCoverage:
+    """Tests pinning the full ligature coverage of the two presentation blocks.
+
+    unicodedataplus 16.0.0 counts 494 assigned ligature codepoints
+    (U+FB50-FDFF and U+FE70-FEFF): 448 decompose to base-character
+    sequences, 32 honorific/phrase ligatures are deleted to '', and 14
+    Uyghur/non-Urdu ligatures are excluded from the table entirely.
+    """
+
+    def testExcludedRegistryPinsExactlyTheFourteenNonUrduLigatures(self):
+        """Test that LIGATURE_EXCLUDED is exactly the FBEC/FBED and
+        FBF0-FBFB groups (partner letters outside the Urdu charset)."""
+        expected = {
+            0xFBEC, 0xFBED,  # YEH WITH HAMZA ABOVE WITH AE (partner U+06D5)
+            *range(0xFBF0, 0xFBF9),  # YEH WITH HAMZA ABOVE WITH U/OE/YU/E
+            *range(0xFBF9, 0xFBFC),  # UIGHUR KIRGHIZ YEH ... WITH ALEF MAKSURA
+        }
+        assert {ord(c) for c in LIGATURE_EXCLUDED} == expected
+
+    def testDeletedRegistryPinsExactlyTheThirtyTwoHonorificLigatures(self):
+        """Test that LIGATURE_DELETED is exactly the honorific, invocation,
+        and standalone-word ligature groups."""
+        expected = {
+            *range(0xFD40, 0xFD50),  # honorific/invocation ligatures
+            0xFDCF,  # SALAAMUHU ALAYNAA
+            *range(0xFDF0, 0xFDFC),  # standalone words and phrases (incl. ALLAH)
+            *range(0xFDFD, 0xFE00),  # BISMILLAH..., SUBHAANAHU..., AZZA WA JALL
+        }
+        assert {ord(c) for c in LIGATURE_DELETED} == expected
+
+    def testEveryLigatureCodepointIsAccountedFor(self):
+        """Test that mapped, deleted, and excluded classes partition the
+        494 ligature codepoints with no overlap and no silent gaps."""
+        ligatures = set(ligatureCodepoints())
+        mapped = {ord(c) for c, replacement in LIGATURE_MAP.items() if replacement}
+        deleted = {ord(c) for c, replacement in LIGATURE_MAP.items() if not replacement}
+        excluded = {ord(c) for c in LIGATURE_EXCLUDED}
+        assert len(ligatures) == 494
+        assert not mapped & deleted, "a codepoint cannot be both mapped and deleted"
+        assert not mapped & excluded, "a codepoint cannot be both mapped and excluded"
+        assert not deleted & excluded, "a codepoint cannot be both deleted and excluded"
+        missing = sorted(f"U+{cp:04X}" for cp in ligatures - (mapped | deleted | excluded))
+        assert mapped | deleted | excluded == ligatures, f"silent gaps: {missing}"
+
+    def testDeletedEntriesMapToEmptyString(self):
+        """Test that every registry entry of LIGATURE_DELETED maps to '' in the table."""
+        for char in LIGATURE_DELETED:
+            assert LIGATURE_MAP[char] == ""
+
+    def testDeletedEntriesAreCompleteWordsAndVanishUnderNormalize(self):
+        """Test that honorific and phrase ligatures are stripped outright
+        by the full pipeline."""
+        for codepoint in (0xFD40, 0xFDCF, 0xFDF2, 0xFDFD, 0xFDFA):
+            assert normalize(chr(codepoint)) == "", f"U+{codepoint:04X}"
+
+    def testMarkBearingLigaturesMapToMarksOnly(self):
+        """Test that the mark-bearing ligatures whose decompositions hold
+        U+0020/U+0640 (U+FC5E-FC63, U+FCF2-FCF4) map to combining marks
+        only, and are then stripped by the full pipeline."""
+        for codepoint in [*range(0xFC5E, 0xFC64), *range(0xFCF2, 0xFCF5)]:
+            replacement = LIGATURE_MAP[chr(codepoint)]
+            assert replacement, f"U+{codepoint:04X} must not map to ''"
+            assert all(unicodedata.combining(c) > 0 for c in replacement), (
+                f"U+{codepoint:04X} must map to combining marks only"
+            )
+            assert normalize(chr(codepoint)) == "", f"U+{codepoint:04X}"
+
+    def testAllEightLamAlefLigaturesNormalize(self):
+        """Test that all eight U+FEF5-FEFC ligatures normalize through the
+        full pipeline to lam-alef or lam-alef-madda."""
+        for codepoint in range(0xFEF7, 0xFEFD):
+            assert normalize(chr(codepoint)) == "\u0644\u0627", f"U+{codepoint:04X}"
+        for codepoint in (0xFEF5, 0xFEF6):
+            assert normalize(chr(codepoint)) == "\u0644\u0622", f"U+{codepoint:04X}"
+
+    def testYehHamzaLigaturesFoldToBaseSequences(self):
+        """Test that the Urdu YEH WITH HAMZA ligatures (U+FBEA-FBEB,
+        U+FBEE-FBEF) fold to their base character pairs."""
+        for codepoint in (0xFBEA, 0xFBEB):
+            assert normalizeUrduChars(chr(codepoint)) == "\u0626\u0627", f"U+{codepoint:04X}"
+        for codepoint in (0xFBEE, 0xFBEF):
+            assert normalizeUrduChars(chr(codepoint)) == "\u0626\u0648", f"U+{codepoint:04X}"
+
+    def testExcludedLigaturesPassThroughUnchanged(self):
+        """Test that the excluded Uyghur/non-Urdu ligatures have no entry
+        and pass through normalizeUrduChars untouched."""
+        for codepoint in (0xFBEC, 0xFBF0, 0xFBF9):
+            char = chr(codepoint)
+            assert char not in LIGATURE_MAP, f"U+{codepoint:04X} must have no entry"
+            assert char in LIGATURE_EXCLUDED
+            assert normalizeUrduChars(char) == char
+
+    def testRialSignHasNoEntry(self):
+        """Test that U+FDFC (ARABIC RIAL SIGN, not a ligature) is absent
+        from the table and passes through."""
+        assert "\ufdfc" not in LIGATURE_MAP
+        assert normalizeUrduChars("\ufdfc") == "\ufdfc"
+
+    def testBareHamzaAlefFoldsToAlef(self):
+        """Test that the sanctioned U+0623/U+0625 exception folds bare
+        hamza'd alefs to ALEF through both the char stage and the pipeline."""
+        for codepoint in (0x0623, 0x0625):
+            assert normalizeUrduChars(chr(codepoint)) == "\u0627", f"U+{codepoint:04X}"
+            assert normalize(chr(codepoint)) == "\u0627", f"U+{codepoint:04X}"
+
+    def testPreservedMarksUnmodified(self):
+        """Test that the ligature work left PRESERVED_MARKS exactly the
+        structural pair {U+0653, U+0654}."""
+        assert PRESERVED_MARKS == {"\u0653", "\u0654"}
+
+    def testOriginalLamAlefEntriesDoNotRegress(self):
+        """Test the original four-entry behavior: isolated/final
+        lam-alef to lam+alef and isolated/final lam-alef-madda to
+        lam+alef-madda."""
+        assert LIGATURE_MAP["\ufefb"] == "\u0644\u0627"
+        assert LIGATURE_MAP["\ufefc"] == "\u0644\u0627"
+        assert LIGATURE_MAP["\ufef5"] == "\u0644\u0622"
+        assert LIGATURE_MAP["\ufef6"] == "\u0644\u0622"
+        assert normalizeUrduChars("\ufefb\ufefc") == "\u0644\u0627" * 2
+        assert normalizeUrduChars("\ufef5\ufef6") == "\u0644\u0622" * 2
 
 
 # ******************************************************************************

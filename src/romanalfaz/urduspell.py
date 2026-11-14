@@ -73,6 +73,13 @@ URDU_VARIANT_MAP: dict[str, list[str]] = {
         "\u0627",  # ARABIC LETTER ALEF
         "\ufe8d",  # ARABIC LETTER ALEF ISOLATED FORM
         "\ufe8e",  # ARABIC LETTER ALEF FINAL FORM
+        # Exception enabling full lam-alef ligature coverage (U+FEF7-U+FEFA):
+        # bare hamza'd alefs fold to ALEF, consistent with this map's other
+        # cross-dialect folds (e.g. U+0624, WAW WITH HAMZA ABOVE -> U+0648).
+        # The hamza (U+0655) is a fold input only and never survives, so the
+        # PRESERVED_MARKS contract is untouched.
+        "\u0623",  # ARABIC LETTER ALEF WITH HAMZA ABOVE
+        "\u0625",  # ARABIC LETTER ALEF WITH HAMZA BELOW
     ],
     # ALIF MADDA (آ)
     "\u0622": [
@@ -431,15 +438,170 @@ for processing, effectively filtering out visual representations.
 """
 
 # LIGATURE MAP START
-LIGATURE_MAP: dict[str, str] = {
-    "\ufefb": "\u0644\u0627",  # ARABIC LIGATURE LAM WITH ALEF ISOLATED FORM -> ل + ا
-    "\ufefc": "\u0644\u0627",  # ARABIC LIGATURE LAM WITH ALEF FINAL FORM -> ل + ا
-    # ARABIC LIGATURE LAM WITH ALEF WITH MADDA ABOVE ISOLATED FORM -> ل + آ
-    "\ufef5": "\u0644\u0622",
-    "\ufef6": "\u0644\u0622",  # ARABIC LIGATURE LAM WITH ALEF WITH MADDA ABOVE FINAL FORM -> ل + آ
-}
+
+# ******************************************************************************
+# The Arabic presentation-form ranges (U+FB50-FDFF and U+FE70-FEFF) contain
+# exactly 494 assigned codepoints whose official Unicode names contain
+# LIGATURE (verified against unicodedataplus 16.0.0). Every one of them falls
+# into exactly one of three classes:
+#
+#   1. Paired/triplet ligatures: decomposed to their base-character sequence
+#      (compatibility tags stripped). Mark-bearing ligatures among them
+#      (U+FC5B-FC5D, U+FC5E-FC63, U+FC90, U+FCF2-FCF4, U+FCD9, U+FD3C-FD3D)
+#      keep their combining marks, which pass through to be stripped
+#      downstream by removeMarks; the U+0020 and U+0640 of their
+#      decompositions (where present) are dropped -- a space or tatweel
+#      inside a word would split it for lookup.
+#   2. Honorifics, phrases, and standalone-word ligatures: mapped to "" and
+#      stripped from the input. These are complete words (e.g. U+FDF2, ALLAH)
+#      that require no decomposition and no dictionary lookup.
+#   3. Excluded ligatures: no entry at all, so they pass through untouched
+#      like any other non-Urdu character (see LIGATURE_EXCLUDED below).
+#
+# The two registries below define classes 2 and 3 explicitly; every other
+# ligature codepoint is generated from its Unicode decomposition field at
+# import time by _buildLigatureMap. Nothing is left to a silent gap: the
+# tests assert that all three classes together account for every ligature
+# codepoint of the two ranges.
+
+LIGATURE_EXCLUDED: frozenset[str] = frozenset(
+    [
+        # U+FBEC/U+FBED: LIGATURE YEH WITH HAMZA ABOVE WITH AE (partner
+        # U+06D5, AE) -- U+06D5 is not an Urdu letter, so the ligature is
+        # outside the target language.
+        "\ufbec",
+        "\ufbed",
+        # U+FBF0-FBF8: LIGATURE YEH WITH HAMZA ABOVE WITH U/OE/YU/E -- the
+        # Uyghur/Kazakh/Kirghiz vowel ligatures; not Urdu.
+        "\ufbf0",
+        "\ufbf1",
+        "\ufbf2",
+        "\ufbf3",
+        "\ufbf4",
+        "\ufbf5",
+        "\ufbf6",
+        "\ufbf7",
+        "\ufbf8",
+        # U+FBF9-FBFB: LIGATURE UIGHUR KIRGHIZ YEH WITH HAMZA ABOVE WITH
+        # ALEF MAKSURA -- same Uyghur family (although the partner U+0649 is
+        # itself in URDU_VARIANT_MAP, the ligature is not Urdu).
+        "\ufbf9",
+        "\ufbfa",
+        "\ufbfb",
+    ]
+)
+"""
+Arabic presentation-form ligatures deliberately given no entry in
+:data:`romanalfaz.urduspell.LIGATURE_MAP`.
+
+These 14 codepoints are ligatures of the target script (U+0626) with letters
+outside the Urdu charset (U+06D5) or of the Uyghur/Kazakh/Kirghiz vowel
+series. They pass through :py:func:`romanalfaz.urduspell.normalizeUrduChars`
+untouched, like any other non-Urdu base letter.
+"""
+
+LIGATURE_DELETED: frozenset[str] = frozenset(
+    [
+        # U+FD40-FD4F: honorific/invocation ligatures (RAHIMAHU ALLAAH,
+        # RADI ALLAAHU ANH, ALAYHI AS-SALAAM, QUDDISA SIRRAH, ...) with no
+        # decomposition field in the Unicode data.
+        *("\ufd40", "\ufd41", "\ufd42", "\ufd43", "\ufd44", "\ufd45"),
+        *("\ufd46", "\ufd47", "\ufd48", "\ufd49", "\ufd4a", "\ufd4b"),
+        *("\ufd4c", "\ufd4d", "\ufd4e", "\ufd4f"),
+        # U+FDCF: SALAAMUHU ALAYNAA, no decomposition (U+FDC8-FDCE are
+        # unassigned in Unicode 16.0).
+        "\ufdcf",
+        # U+FDF0-FDFB: standalone-word and phrase ligatures. Although most
+        # of them (e.g. U+FDF2, ALLAH) do decompose to real words, they are
+        # full-fledged complete words that require no decomposition and no
+        # dictionary lookup, so they are deliberately stripped instead.
+        *("\ufdf0", "\ufdf1", "\ufdf2", "\ufdf3", "\ufdf4", "\ufdf5"),
+        *("\ufdf6", "\ufdf7", "\ufdf8", "\ufdf9", "\ufdfa", "\ufdfb"),
+        # U+FDFD-FDFF: BISMILLAH AR-RAHMAN AR-RAHEEM, SUBHAANAHU WA TAAALAA,
+        # AZZA WA JALL -- phrase ligatures with no decomposition field.
+        "\ufdfd",
+        "\ufdfe",
+        "\ufdff",
+    ]
+)
+"""
+Arabic presentation-form ligatures mapped to ``""`` by
+:data:`romanalfaz.urduspell.LIGATURE_MAP` and thereby stripped from the input.
+
+These 32 codepoints are honorific, invocation, and phrase ligatures, or
+standalone-word ligatures (e.g. U+FDF2, ALLAH) that are complete words
+requiring no dictionary lookup. See the section comment above for the
+group-by-group rationale.
+"""
+
+LIGATURE_RANGES: tuple[tuple[int, int], ...] = ((0xFB50, 0xFDFF), (0xFE70, 0xFEFF))
+"""The two Arabic presentation-form blocks scanned for ligature codepoints."""
+
+
+def _buildLigatureMap() -> dict[str, str]:
+    """
+    Builds the ligature translation table from the Unicode decomposition fields.
+
+    Iterates the two Arabic presentation-form blocks character by character and
+    classifies every assigned ligature codepoint:
+
+    - Codepoints of :data:`romanalfaz.urduspell.LIGATURE_EXCLUDED` get no entry.
+    - Codepoints of :data:`romanalfaz.urduspell.LIGATURE_DELETED` map to ``""``.
+    - Every other ligature maps to its compatibility decomposition with the
+      positional tag stripped and U+0020 (SPACE) / U+0640 (TATWEEL) dropped;
+      combining marks are kept and pass through to the mark-stripping stage.
+
+    Returns:
+        dict[str, str]: A translation table keyed by single ligature
+        characters, with base-character sequences (or ``""``) as values.
+    """
+    ligatureMap: dict[str, str] = {}
+    for low, high in LIGATURE_RANGES:
+        for codepoint in range(low, high + 1):
+            char = chr(codepoint)
+            name = ud.name(char, None)
+            if name is None or "LIGATURE" not in name:
+                # Assigned non-ligature characters and unassigned codepoints
+                # (e.g. U+FDFC, the ARABIC RIAL SIGN) get no entry.
+                continue
+            if char in LIGATURE_EXCLUDED:
+                continue
+            if char in LIGATURE_DELETED:
+                ligatureMap[char] = ""
+                continue
+            parts = ud.decomposition(char).split()
+            if parts and parts[0].startswith("<"):
+                # Strip the <isolated>/<final>/<initial>/<medial> tag.
+                parts = parts[1:]
+            replacement = "".join(
+                chr(int(part, 16)) for part in parts if part not in ("0020", "0640")
+            )
+            ligatureMap[char] = replacement
+    return ligatureMap
+
+
+LIGATURE_MAP: dict[str, str] = _buildLigatureMap()
 # LIGATURE MAP END
-"""Urdu ligature mapping to sequences of base characters."""
+"""
+Arabic presentation-form ligature mapping, built at import time from the
+Unicode decomposition fields (see :py:func:`romanalfaz.urduspell._buildLigatureMap`).
+
+Keys are the 494 assigned ligature codepoints of the two presentation-form
+blocks minus the 14 excluded ones; values are base-character sequences (448
+entries) or the empty string (32 honorific/phrase entries). Mark-bearing
+decompositions keep their combining marks and drop their U+0020/U+0640.
+"""
+
+LIGATURE_TRANSLATION_TABLE: dict[int, str] = {
+    ord(ligature): replacement for ligature, replacement in LIGATURE_MAP.items()
+}
+"""
+Integer-keyed view of :data:`romanalfaz.urduspell.LIGATURE_MAP` for ``str.translate``.
+
+``str.translate`` indexes its mapping by Unicode ordinals, so the
+character-keyed data structure above is flattened once, at import time, into
+the table :py:func:`romanalfaz.urduspell.normalizeUrduChars` actually applies.
+"""
 
 URDU_VARIANT_REVERSAL_MAP: dict[str, str] = {
     v: base for base, variants in URDU_VARIANT_MAP.items() for v in variants
@@ -474,10 +636,12 @@ def normalize(text: str) -> str:
         pipeline, so no transformation is applied twice:
 
         - Positional presentation forms (e.g., U+FE8F, the isolated form of U+0628),
-          ligatures (e.g., U+FEFB), and U+0640 (TATWEEL) are folded back to their
+          ligatures (the full Arabic presentation-form ligature set, e.g., U+FEFB),
+          and U+0640 (TATWEEL) are folded back to their
           base characters by :py:func:`romanalfaz.urduspell.normalizeUrduChars` only.
         - Cross-dialect base character folds (e.g., U+0624, WAW WITH HAMZA ABOVE,
-          to U+0648, WAW) are applied by the same maps.
+          to U+0648, WAW; and U+0623/U+0625, ALEF WITH HAMZA ABOVE/BELOW, to
+          U+0627, ALEF) are applied by the same maps.
         - Combining marks other than U+0653 (MADDAH ABOVE) and U+0654 (HAMZA ABOVE)
           are removed by :py:func:`romanalfaz.urduspell.removeNonLetterChars` (via
           :py:func:`romanalfaz.urduspell.removeMarks`).
@@ -502,6 +666,12 @@ def normalize(text: str) -> str:
 
         - U+FE8F (isolated form of U+0628): folded to U+0628 only by the maps.
         - U+FEFB (LAM-ALEF ligature): decomposed to U+0644 U+0627 only by the maps.
+        - U+FC5E (mark-bearing ligature): the maps drop the U+0020 of its
+          compatibility decomposition and emit its combining marks (U+064C,
+          U+0651); :py:func:`romanalfaz.urduspell.removeMarks` then removes them.
+        - U+FDF2 (ALLAH ligature): mapped to the empty string only by the maps
+          -- a complete honorific word that requires no decomposition and no
+          dictionary lookup.
         - U+0628 U+064E (base plus FATHA): the mark is removed only by
           :py:func:`romanalfaz.urduspell.removeMarks`; the maps leave marks untouched.
         - U+0622 (precomposed): a no-op at every stage (NFD decomposes,
@@ -517,6 +687,10 @@ def normalize(text: str) -> str:
         | U+FEFB (ligature)        | U+FEFB (unchanged) | U+0644 U+0627 (folded)    | U+0644      |
         |                          |                    |                           | U+0627      |
         +--------------------------+--------------------+---------------------------+-------------+
+        | U+FC5E (mark ligature)   | U+FC5E (unchanged) | U+064C U+0651 (marks)     | ''          |
+        +--------------------------+--------------------+---------------------------+-------------+
+        | U+FDF2 (honorific)       | U+FDF2 (unchanged) | '' (stripped)             | ''          |
+        +--------------------------+--------------------+---------------------------+-------------+
         | U+0628 U+064E            | U+0628             | U+0628 U+064E (unchanged) | U+0628      |
         | (base + fatha)           | (mark removed)     |                           |             |
         +--------------------------+--------------------+---------------------------+-------------+
@@ -528,7 +702,12 @@ def normalize(text: str) -> str:
         The division of labor above rests on an exact fit: the marks preserved by
         :py:func:`romanalfaz.urduspell.removeMarks` (U+0653 and U+0654) are exactly the
         marks that the precomposed characters of the variant map's charset (its
-        keys and values) carry. This is what makes every stage a no-op on the
+        keys and values) carry. Mark-bearing ligatures do not disturb this fit:
+        their combining marks are ordinary marks that
+        :py:func:`romanalfaz.urduspell.removeMarks` strips, and the U+0623/U+0625
+        fold happens before marks are ever considered, so
+        :data:`romanalfaz.urduspell.PRESERVED_MARKS` remains exactly
+        {U+0653, U+0654}. This is what makes every stage a no-op on the
         other's work. See the Notes of
         :py:func:`romanalfaz.urduspell.normalizeUrduChars` and
         :py:func:`romanalfaz.urduspell.removeMarks` for the two sides of this contract.
@@ -574,10 +753,15 @@ def normalizeUrduChars(text: str) -> str:
 
     This function processes input text to handle:
 
-      #. Ligature presentation forms (single characters that render as a ligature, e.g., lam-alef).
+      #. Ligature presentation forms (the full Arabic presentation-form
+         ligature set, e.g., lam-alef U+FEFB; mark-bearing ligatures such as
+         U+FC5E; honorific/phrase ligatures such as U+FDF2, which are
+         stripped outright).
       #. Positional variants (initial, medial, final, isolated forms)
          mapped back to base characters.
-      #. Cross-dialect base characters, e.g., U+0624 (WAW WITH HAMZA ABOVE) folded to U+0648 (WAW).
+      #. Cross-dialect base characters, e.g., U+0624 (WAW WITH HAMZA ABOVE) folded
+         to U+0648 (WAW), and U+0623/U+0625 (ALEF WITH HAMZA ABOVE/BELOW) folded
+         to U+0627 (ALEF).
 
     The output is a string containing only the standard base Urdu characters.
 
@@ -590,7 +774,14 @@ def normalizeUrduChars(text: str) -> str:
         :py:func:`romanalfaz.urduspell.removeMarks` preserves (U+0653 and U+0654),
         otherwise the mark-stripping step would alter a letter this function just
         produced. This is this function's side of the contract described in
-        :py:func:`romanalfaz.urduspell.normalize`.
+        :py:func:`romanalfaz.urduspell.normalize`. Ligature
+        decompositions are no exception: mark-bearing ligatures (e.g. U+FC5E)
+        emit only ordinary combining marks, which
+        :py:func:`romanalfaz.urduspell.removeMarks` strips, and the U+0623/U+0625
+        fold happens before marks are ever considered (their hamza, U+0655, is a
+        fold input only and never survives), so
+        :data:`romanalfaz.urduspell.PRESERVED_MARKS` remains exactly
+        {U+0653, U+0654}.
 
     Args:
         text (str): The input string potentially containing ligatures or positional variants.
@@ -610,12 +801,16 @@ def normalizeUrduChars(text: str) -> str:
         return ""
 
     # Step 1: Handle Ligature Presentation Forms
-    # LIGATURE_MAP is a dictionary where keys are single ligature presentation
-    # form characters (e.g., lam-alef U+FEFB) and values are the two base
-    # characters they decompose into (e.g., "لا").
-    # We iterate through each pair and replace occurrences in the text.
-    for ligature, replacement in LIGATURE_MAP.items():
-        text = text.replace(ligature, replacement)
+    # LIGATURE_MAP is a single-pass translation table built at import time
+    # from the Unicode decomposition fields: keys are single ligature
+    # presentation form characters (e.g., lam-alef U+FEFB) and values are the
+    # base character sequences they decompose into (e.g., "لا"), with the
+    # compatibility tags stripped. Honorific/phrase ligatures map to "" and
+    # are deleted, and mark-bearing ligatures keep their combining marks
+    # (their U+0020/U+0640 are dropped) so removeMarks strips them downstream.
+    # str.translate indexes by ordinal, so the character-keyed structure is
+    # applied through its integer-keyed view LIGATURE_TRANSLATION_TABLE.
+    text = text.translate(LIGATURE_TRANSLATION_TABLE)
 
     # Step 2: Handle 1-to-1 Character Variants using map()
     # URDU_VARIANT_REVERSAL_MAP maps specific Unicode code points (like initial/medial forms)
