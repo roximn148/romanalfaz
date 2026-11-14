@@ -3,7 +3,10 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE.txt file in the root directory of this source tree.
 # ******************************************************************************
+import time
 import unicodedata
+from importlib import resources as importlibResources
+from typing import NamedTuple
 
 import pytest
 
@@ -648,6 +651,140 @@ class TestLigatureCoverage:
         assert LIGATURE_MAP["\ufef6"] == "\u0644\u0622"
         assert normalizeUrduChars("\ufefb\ufefc") == "\u0644\u0627" * 2
         assert normalizeUrduChars("\ufef5\ufef6") == "\u0644\u0622" * 2
+
+
+# ******************************************************************************
+MAX_REPORTED_VIOLATIONS = 20
+"""How many round-trip violations the failure message lists before capping."""
+
+
+class VocabularySnapshot(NamedTuple):
+    """The parsed bundled vocabulary plus the timings of the stability pass."""
+
+    words: list[str]
+    """(list[str]): The bundled words in file order."""
+    frequencies: list[int]
+    """(list[int]): The bundled frequencies, aligned with `words`."""
+    loadDuration: float
+    """(float): Seconds spent loading and parsing the vocabulary file."""
+    normalizeDuration: float
+    """(float): Seconds spent in the per-word normalize pass."""
+    violations: list[tuple[int, str, str]]
+    """(list): ``(lineno, word, normalized)`` for every word that does not round-trip."""
+
+
+def formatViolations(violations: list[tuple[int, str, str]]) -> str:
+    """
+    Formats the round-trip violations into a single actionable message.
+
+    Args:
+        violations (list[tuple[int, str, str]]): The ``(lineno, word,
+            normalized)`` triples of every word that does not round-trip.
+
+    Returns:
+        str: A message listing the first
+        :data:`romanalfaz.tests.test_urduspell.MAX_REPORTED_VIOLATIONS`
+        violations with their line numbers, plus the total count.
+    """
+    shown = violations[:MAX_REPORTED_VIOLATIONS]
+    lines = [
+        "the bundled vocabulary does not round-trip under "
+        "romanalfaz.urduspell.normalize "
+        f"({len(violations)} violation(s), first {len(shown)} shown):"
+    ]
+    lines.extend(
+        f"  line {lineno}: word={word!r} normalized={normalized!r}"
+        for lineno, word, normalized in shown
+    )
+    if len(violations) > len(shown):
+        lines.append(f"  ... and {len(violations) - len(shown)} more")
+    return "\n".join(lines)
+
+
+# ******************************************************************************
+class TestVocabularyStability:
+    """Tests that the bundled vocabulary round-trips under normalization.
+
+    The bundled ``UrduWords5k.sym`` is canonical by construction: every word
+    is stored in its base-letter Urdu form. This class guarantees that the
+    shipped dictionary round-trips under
+    :py:func:`romanalfaz.urduspell.normalize`, so any normalization change
+    that would rewrite the shipped vocabulary fails loudly and names the
+    broken words instead of silently changing the dictionary. Changing the
+    vocabulary therefore requires a deliberate, reviewed decision.
+
+    Note:
+        The class-scoped `snapshot` fixture loads and parses the vocabulary
+        and runs the per-word normalize pass exactly once per class, timing
+        both steps separately with ``time.perf_counter``. The timings are
+        recorded (and printed) for placement optimization only; they are
+        deliberately not asserted against a threshold.
+    """
+
+    @pytest.fixture(scope="class", autouse=True)
+    @classmethod
+    def snapshot(cls) -> VocabularySnapshot:
+        """Loads, parses, and normalizes the bundled vocabulary once, timed.
+
+        Returns:
+            VocabularySnapshot: The parsed words and frequencies, both
+            step durations, and the collected round-trip violations.
+        """
+        startedAt = time.perf_counter()
+        symPath = importlibResources.files("romanalfaz") / "UrduWords5k.sym"
+        symText = symPath.read_text(encoding="utf-8")
+        words: list[str] = []
+        frequencies: list[int] = []
+        for lineno, line in enumerate(symText.splitlines(), start=1):
+            assert line.strip(), f"line {lineno}: blank line in bundled vocabulary"
+            word, separator, frequencyText = line.rpartition("$")
+            assert separator and word and frequencyText.isdigit(), (
+                f"line {lineno}: malformed vocabulary line {line!r}"
+            )
+            words.append(word)
+            frequencies.append(int(frequencyText))
+        loadDuration = time.perf_counter() - startedAt
+
+        normalizeStartedAt = time.perf_counter()
+        violations = [
+            (lineno, word, normalized)
+            for lineno, word, normalized in (
+                (lineno, word, normalize(word))
+                for lineno, word in enumerate(words, start=1)
+            )
+            if normalized != word
+        ]
+        normalizeDuration = time.perf_counter() - normalizeStartedAt
+        return VocabularySnapshot(
+            words, frequencies, loadDuration, normalizeDuration, violations
+        )
+
+    def testBundledWordCountIsPinned(self, snapshot):
+        """Test that the bundled vocabulary has exactly 4994 entries."""
+        assert len(snapshot.words) == 4994
+
+    def testEveryWordRoundTripsUnderNormalize(self, snapshot):
+        """Test that every bundled word is already canonical: normalize(word) == word.
+
+        Fails with a single message naming every broken line (capped at the
+        first 20) instead of stopping at the first mismatch.
+        """
+        assert not snapshot.violations, formatViolations(snapshot.violations)
+
+    def testStabilityPassTimingsAreRecorded(self, snapshot, capsys):
+        """Test that both step durations were measured and are non-negative.
+
+        This is a recording check, not a performance threshold: the timings
+        exist so the assertion's placement can be optimized if the pass
+        becomes slow.
+        """
+        assert snapshot.loadDuration >= 0.0
+        assert snapshot.normalizeDuration >= 0.0
+        print(
+            f"\nvocabulary load/parse: {snapshot.loadDuration:.4f} s; "
+            f"normalize pass: {snapshot.normalizeDuration:.4f} s "
+            f"({len(snapshot.words)} words)"
+        )
 
 
 # ******************************************************************************
