@@ -466,6 +466,16 @@ for processing, effectively filtering out visual representations.
 # pattern of URDU_VARIANT_MAP). Nothing is left to a silent gap: the tests
 # assert that all three classes together account for every ligature
 # codepoint of the two ranges.
+#
+# Both registries are authoring-time and verification artifacts, parked in
+# this module rather than the test suite and never consulted at runtime
+# (normalizeUrduChars applies only LIGATURE_TRANSLATION_TABLE). This module
+# is the public API reference the docs are built from, so the coverage
+# decisions belong next to the table a maintainer reads when extending it
+# (e.g. for a future Unicode release), in the explicit commented-table style
+# of URDU_VARIANT_MAP; the enforcement itself lives in the test suite, which
+# asserts the 448 + 57 + 14 partition over all 519 codepoints -- the data
+# here, the enforcement there.
 
 LIGATURE_EXCLUDED: frozenset[str] = frozenset(
     [
@@ -501,6 +511,12 @@ These 14 codepoints are ligatures of the target script (U+0626) with letters
 outside the Urdu charset (U+06D5) or of the Uyghur/Kazakh/Kirghiz vowel
 series. They pass through :py:func:`romanalfaz.urduspell.normalizeUrduChars`
 untouched, like any other non-Urdu base letter.
+
+This registry is the only record that these 14 codepoints were considered
+and deliberately given no entry: without it, an absent entry would be
+indistinguishable from an oversight. It is an authoring-time artifact, like
+the deleted registry below, and is never consulted at runtime; see the
+section comment above for the module/test-suite division of roles.
 """
 
 LIGATURE_DELETED: frozenset[str] = frozenset(
@@ -547,6 +563,12 @@ standalone-word ligatures (e.g. U+FDF2, ALLAH) that are complete words
 requiring no dictionary lookup; 32 of them are present in unicodedataplus
 16.0.0 and 25 are Unicode 17.0 additions kept as literals. See the section
 comment above for the group-by-group rationale.
+
+The set is derivable -- the keys of :data:`romanalfaz.urduspell.LIGATURE_MAP`
+whose value is ``""`` -- but is kept as an explicit literal registry for
+auditability, and because the Unicode 17.0 additions are unknown to the
+installed unicodedataplus. It is an authoring-time artifact, like the
+excluded registry above, and is never consulted at runtime.
 """
 
 LIGATURE_MAP: dict[str, str] = {
