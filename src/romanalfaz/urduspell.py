@@ -570,7 +570,7 @@ auditability, and because the Unicode 17.0 additions are unknown to the
 installed unicodedataplus. It is an authoring-time artifact, like the
 excluded registry above, and is never consulted at runtime.
 """
-
+# LIGATURE MAP START
 LIGATURE_MAP: dict[str, str] = {
     # lam-alef family (U+FEF5-FEFC)
     "\ufef5": "\u0644\u0622",  # ARABIC LETTER LAM + ARABIC LETTER ALEF WITH MADDA ABOVE
