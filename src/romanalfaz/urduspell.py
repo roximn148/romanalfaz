@@ -442,8 +442,10 @@ for processing, effectively filtering out visual representations.
 # ******************************************************************************
 # The Arabic presentation-form ranges (U+FB50-FDFF and U+FE70-FEFF) contain
 # exactly 494 assigned codepoints whose official Unicode names contain
-# LIGATURE (verified against unicodedataplus 16.0.0). Every one of them falls
-# into exactly one of three classes:
+# LIGATURE (verified against unicodedataplus 16.0.0), plus 25 honorific
+# ligatures added in Unicode 17.0 that are unassigned in unicodedataplus
+# 16.0.0 (U+FBC3-FBD2, U+FD90-FD91, U+FDC8-FDCE; 519 codepoints in total).
+# Every one of them falls into exactly one of three classes:
 #
 #   1. Paired/triplet ligatures: decomposed to their base-character sequence
 #      (compatibility tags stripped). Mark-bearing ligatures among them
@@ -459,9 +461,10 @@ for processing, effectively filtering out visual representations.
 #      like any other non-Urdu character (see LIGATURE_EXCLUDED below).
 #
 # The two registries below define classes 2 and 3 explicitly; every other
-# ligature codepoint is generated from its Unicode decomposition field at
-# import time by _buildLigatureMap. Nothing is left to a silent gap: the
-# tests assert that all three classes together account for every ligature
+# ligature codepoint is a literal entry of the table, authored from the
+# Unicode decomposition data (one-off generator at authoring time, in the
+# pattern of URDU_VARIANT_MAP). Nothing is left to a silent gap: the tests
+# assert that all three classes together account for every ligature
 # codepoint of the two ranges.
 
 LIGATURE_EXCLUDED: frozenset[str] = frozenset(
@@ -502,6 +505,17 @@ untouched, like any other non-Urdu base letter.
 
 LIGATURE_DELETED: frozenset[str] = frozenset(
     [
+        # U+FBC3-FBD2, U+FD90-FD91, U+FDC8-FDCE: honorific/invocation
+        # ligatures added in Unicode 17.0. They are unassigned in
+        # unicodedataplus 16.0.0, so they are kept as literals here (and as
+        # literal "" entries of LIGATURE_MAP) to make the deletion
+        # version-independent.
+        *("\ufbc3", "\ufbc4", "\ufbc5", "\ufbc6", "\ufbc7", "\ufbc8"),
+        *("\ufbc9", "\ufbca", "\ufbcb", "\ufbcc", "\ufbcd", "\ufbce"),
+        *("\ufbcf", "\ufbd0", "\ufbd1", "\ufbd2"),
+        *("\ufd90", "\ufd91"),
+        *("\ufdc8", "\ufdc9", "\ufdca", "\ufdcb", "\ufdcc", "\ufdcd"),
+        "\ufdce",
         # U+FD40-FD4F: honorific/invocation ligatures (RAHIMAHU ALLAAH,
         # RADI ALLAAHU ANH, ALAYHI AS-SALAAM, QUDDISA SIRRAH, ...) with no
         # decomposition field in the Unicode data.
@@ -528,68 +542,558 @@ LIGATURE_DELETED: frozenset[str] = frozenset(
 Arabic presentation-form ligatures mapped to ``""`` by
 :data:`romanalfaz.urduspell.LIGATURE_MAP` and thereby stripped from the input.
 
-These 32 codepoints are honorific, invocation, and phrase ligatures, or
+These 57 codepoints are honorific, invocation, and phrase ligatures, or
 standalone-word ligatures (e.g. U+FDF2, ALLAH) that are complete words
-requiring no dictionary lookup. See the section comment above for the
-group-by-group rationale.
+requiring no dictionary lookup; 32 of them are present in unicodedataplus
+16.0.0 and 25 are Unicode 17.0 additions kept as literals. See the section
+comment above for the group-by-group rationale.
 """
 
-LIGATURE_RANGES: tuple[tuple[int, int], ...] = ((0xFB50, 0xFDFF), (0xFE70, 0xFEFF))
-"""The two Arabic presentation-form blocks scanned for ligature codepoints."""
-
-
-def _buildLigatureMap() -> dict[str, str]:
-    """
-    Builds the ligature translation table from the Unicode decomposition fields.
-
-    Iterates the two Arabic presentation-form blocks character by character and
-    classifies every assigned ligature codepoint:
-
-    - Codepoints of :data:`romanalfaz.urduspell.LIGATURE_EXCLUDED` get no entry.
-    - Codepoints of :data:`romanalfaz.urduspell.LIGATURE_DELETED` map to ``""``.
-    - Every other ligature maps to its compatibility decomposition with the
-      positional tag stripped and U+0020 (SPACE) / U+0640 (TATWEEL) dropped;
-      combining marks are kept and pass through to the mark-stripping stage.
-
-    Returns:
-        dict[str, str]: A translation table keyed by single ligature
-        characters, with base-character sequences (or ``""``) as values.
-    """
-    ligatureMap: dict[str, str] = {}
-    for low, high in LIGATURE_RANGES:
-        for codepoint in range(low, high + 1):
-            char = chr(codepoint)
-            name = ud.name(char, None)
-            if name is None or "LIGATURE" not in name:
-                # Assigned non-ligature characters and unassigned codepoints
-                # (e.g. U+FDFC, the ARABIC RIAL SIGN) get no entry.
-                continue
-            if char in LIGATURE_EXCLUDED:
-                continue
-            if char in LIGATURE_DELETED:
-                ligatureMap[char] = ""
-                continue
-            parts = ud.decomposition(char).split()
-            if parts and parts[0].startswith("<"):
-                # Strip the <isolated>/<final>/<initial>/<medial> tag.
-                parts = parts[1:]
-            replacement = "".join(
-                chr(int(part, 16)) for part in parts if part not in ("0020", "0640")
-            )
-            ligatureMap[char] = replacement
-    return ligatureMap
-
-
-LIGATURE_MAP: dict[str, str] = _buildLigatureMap()
+LIGATURE_MAP: dict[str, str] = {
+    # lam-alef family (U+FEF5-FEFC)
+    "\ufef5": "\u0644\u0622",  # ARABIC LETTER LAM + ARABIC LETTER ALEF WITH MADDA ABOVE
+    "\ufef6": "\u0644\u0622",  # ARABIC LETTER LAM + ARABIC LETTER ALEF WITH MADDA ABOVE
+    "\ufef7": "\u0644\u0623",  # ARABIC LETTER LAM + ARABIC LETTER ALEF WITH HAMZA ABOVE
+    "\ufef8": "\u0644\u0623",  # ARABIC LETTER LAM + ARABIC LETTER ALEF WITH HAMZA ABOVE
+    "\ufef9": "\u0644\u0625",  # ARABIC LETTER LAM + ARABIC LETTER ALEF WITH HAMZA BELOW
+    "\ufefa": "\u0644\u0625",  # ARABIC LETTER LAM + ARABIC LETTER ALEF WITH HAMZA BELOW
+    "\ufefb": "\u0644\u0627",  # ARABIC LETTER LAM + ARABIC LETTER ALEF
+    "\ufefc": "\u0644\u0627",  # ARABIC LETTER LAM + ARABIC LETTER ALEF
+    # YEH WITH HAMZA inclusions (U+FBEA-FBEB, U+FBEE-FBEF)
+    "\ufbea": "\u0626\u0627",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER ALEF
+    "\ufbeb": "\u0626\u0627",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER ALEF
+    "\ufbee": "\u0626\u0648",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER WAW
+    "\ufbef": "\u0626\u0648",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER WAW
+    # two-letter contextual ligatures (U+FC00-FD3D)
+    "\ufc00": "\u0626\u062c",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER JEEM
+    "\ufc01": "\u0626\u062d",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER HAH
+    "\ufc02": "\u0626\u0645",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER MEEM
+    "\ufc03": "\u0626\u0649",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER ALEF MAKSURA
+    "\ufc04": "\u0626\u064a",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER YEH
+    "\ufc05": "\u0628\u062c",  # ARABIC LETTER BEH + ARABIC LETTER JEEM
+    "\ufc06": "\u0628\u062d",  # ARABIC LETTER BEH + ARABIC LETTER HAH
+    "\ufc07": "\u0628\u062e",  # ARABIC LETTER BEH + ARABIC LETTER KHAH
+    "\ufc08": "\u0628\u0645",  # ARABIC LETTER BEH + ARABIC LETTER MEEM
+    "\ufc09": "\u0628\u0649",  # ARABIC LETTER BEH + ARABIC LETTER ALEF MAKSURA
+    "\ufc0a": "\u0628\u064a",  # ARABIC LETTER BEH + ARABIC LETTER YEH
+    "\ufc0b": "\u062a\u062c",  # ARABIC LETTER TEH + ARABIC LETTER JEEM
+    "\ufc0c": "\u062a\u062d",  # ARABIC LETTER TEH + ARABIC LETTER HAH
+    "\ufc0d": "\u062a\u062e",  # ARABIC LETTER TEH + ARABIC LETTER KHAH
+    "\ufc0e": "\u062a\u0645",  # ARABIC LETTER TEH + ARABIC LETTER MEEM
+    "\ufc0f": "\u062a\u0649",  # ARABIC LETTER TEH + ARABIC LETTER ALEF MAKSURA
+    "\ufc10": "\u062a\u064a",  # ARABIC LETTER TEH + ARABIC LETTER YEH
+    "\ufc11": "\u062b\u062c",  # ARABIC LETTER THEH + ARABIC LETTER JEEM
+    "\ufc12": "\u062b\u0645",  # ARABIC LETTER THEH + ARABIC LETTER MEEM
+    "\ufc13": "\u062b\u0649",  # ARABIC LETTER THEH + ARABIC LETTER ALEF MAKSURA
+    "\ufc14": "\u062b\u064a",  # ARABIC LETTER THEH + ARABIC LETTER YEH
+    "\ufc15": "\u062c\u062d",  # ARABIC LETTER JEEM + ARABIC LETTER HAH
+    "\ufc16": "\u062c\u0645",  # ARABIC LETTER JEEM + ARABIC LETTER MEEM
+    "\ufc17": "\u062d\u062c",  # ARABIC LETTER HAH + ARABIC LETTER JEEM
+    "\ufc18": "\u062d\u0645",  # ARABIC LETTER HAH + ARABIC LETTER MEEM
+    "\ufc19": "\u062e\u062c",  # ARABIC LETTER KHAH + ARABIC LETTER JEEM
+    "\ufc1a": "\u062e\u062d",  # ARABIC LETTER KHAH + ARABIC LETTER HAH
+    "\ufc1b": "\u062e\u0645",  # ARABIC LETTER KHAH + ARABIC LETTER MEEM
+    "\ufc1c": "\u0633\u062c",  # ARABIC LETTER SEEN + ARABIC LETTER JEEM
+    "\ufc1d": "\u0633\u062d",  # ARABIC LETTER SEEN + ARABIC LETTER HAH
+    "\ufc1e": "\u0633\u062e",  # ARABIC LETTER SEEN + ARABIC LETTER KHAH
+    "\ufc1f": "\u0633\u0645",  # ARABIC LETTER SEEN + ARABIC LETTER MEEM
+    "\ufc20": "\u0635\u062d",  # ARABIC LETTER SAD + ARABIC LETTER HAH
+    "\ufc21": "\u0635\u0645",  # ARABIC LETTER SAD + ARABIC LETTER MEEM
+    "\ufc22": "\u0636\u062c",  # ARABIC LETTER DAD + ARABIC LETTER JEEM
+    "\ufc23": "\u0636\u062d",  # ARABIC LETTER DAD + ARABIC LETTER HAH
+    "\ufc24": "\u0636\u062e",  # ARABIC LETTER DAD + ARABIC LETTER KHAH
+    "\ufc25": "\u0636\u0645",  # ARABIC LETTER DAD + ARABIC LETTER MEEM
+    "\ufc26": "\u0637\u062d",  # ARABIC LETTER TAH + ARABIC LETTER HAH
+    "\ufc27": "\u0637\u0645",  # ARABIC LETTER TAH + ARABIC LETTER MEEM
+    "\ufc28": "\u0638\u0645",  # ARABIC LETTER ZAH + ARABIC LETTER MEEM
+    "\ufc29": "\u0639\u062c",  # ARABIC LETTER AIN + ARABIC LETTER JEEM
+    "\ufc2a": "\u0639\u0645",  # ARABIC LETTER AIN + ARABIC LETTER MEEM
+    "\ufc2b": "\u063a\u062c",  # ARABIC LETTER GHAIN + ARABIC LETTER JEEM
+    "\ufc2c": "\u063a\u0645",  # ARABIC LETTER GHAIN + ARABIC LETTER MEEM
+    "\ufc2d": "\u0641\u062c",  # ARABIC LETTER FEH + ARABIC LETTER JEEM
+    "\ufc2e": "\u0641\u062d",  # ARABIC LETTER FEH + ARABIC LETTER HAH
+    "\ufc2f": "\u0641\u062e",  # ARABIC LETTER FEH + ARABIC LETTER KHAH
+    "\ufc30": "\u0641\u0645",  # ARABIC LETTER FEH + ARABIC LETTER MEEM
+    "\ufc31": "\u0641\u0649",  # ARABIC LETTER FEH + ARABIC LETTER ALEF MAKSURA
+    "\ufc32": "\u0641\u064a",  # ARABIC LETTER FEH + ARABIC LETTER YEH
+    "\ufc33": "\u0642\u062d",  # ARABIC LETTER QAF + ARABIC LETTER HAH
+    "\ufc34": "\u0642\u0645",  # ARABIC LETTER QAF + ARABIC LETTER MEEM
+    "\ufc35": "\u0642\u0649",  # ARABIC LETTER QAF + ARABIC LETTER ALEF MAKSURA
+    "\ufc36": "\u0642\u064a",  # ARABIC LETTER QAF + ARABIC LETTER YEH
+    "\ufc37": "\u0643\u0627",  # ARABIC LETTER KAF + ARABIC LETTER ALEF
+    "\ufc38": "\u0643\u062c",  # ARABIC LETTER KAF + ARABIC LETTER JEEM
+    "\ufc39": "\u0643\u062d",  # ARABIC LETTER KAF + ARABIC LETTER HAH
+    "\ufc3a": "\u0643\u062e",  # ARABIC LETTER KAF + ARABIC LETTER KHAH
+    "\ufc3b": "\u0643\u0644",  # ARABIC LETTER KAF + ARABIC LETTER LAM
+    "\ufc3c": "\u0643\u0645",  # ARABIC LETTER KAF + ARABIC LETTER MEEM
+    "\ufc3d": "\u0643\u0649",  # ARABIC LETTER KAF + ARABIC LETTER ALEF MAKSURA
+    "\ufc3e": "\u0643\u064a",  # ARABIC LETTER KAF + ARABIC LETTER YEH
+    "\ufc3f": "\u0644\u062c",  # ARABIC LETTER LAM + ARABIC LETTER JEEM
+    "\ufc40": "\u0644\u062d",  # ARABIC LETTER LAM + ARABIC LETTER HAH
+    "\ufc41": "\u0644\u062e",  # ARABIC LETTER LAM + ARABIC LETTER KHAH
+    "\ufc42": "\u0644\u0645",  # ARABIC LETTER LAM + ARABIC LETTER MEEM
+    "\ufc43": "\u0644\u0649",  # ARABIC LETTER LAM + ARABIC LETTER ALEF MAKSURA
+    "\ufc44": "\u0644\u064a",  # ARABIC LETTER LAM + ARABIC LETTER YEH
+    "\ufc45": "\u0645\u062c",  # ARABIC LETTER MEEM + ARABIC LETTER JEEM
+    "\ufc46": "\u0645\u062d",  # ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufc47": "\u0645\u062e",  # ARABIC LETTER MEEM + ARABIC LETTER KHAH
+    "\ufc48": "\u0645\u0645",  # ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufc49": "\u0645\u0649",  # ARABIC LETTER MEEM + ARABIC LETTER ALEF MAKSURA
+    "\ufc4a": "\u0645\u064a",  # ARABIC LETTER MEEM + ARABIC LETTER YEH
+    "\ufc4b": "\u0646\u062c",  # ARABIC LETTER NOON + ARABIC LETTER JEEM
+    "\ufc4c": "\u0646\u062d",  # ARABIC LETTER NOON + ARABIC LETTER HAH
+    "\ufc4d": "\u0646\u062e",  # ARABIC LETTER NOON + ARABIC LETTER KHAH
+    "\ufc4e": "\u0646\u0645",  # ARABIC LETTER NOON + ARABIC LETTER MEEM
+    "\ufc4f": "\u0646\u0649",  # ARABIC LETTER NOON + ARABIC LETTER ALEF MAKSURA
+    "\ufc50": "\u0646\u064a",  # ARABIC LETTER NOON + ARABIC LETTER YEH
+    "\ufc51": "\u0647\u062c",  # ARABIC LETTER HEH + ARABIC LETTER JEEM
+    "\ufc52": "\u0647\u0645",  # ARABIC LETTER HEH + ARABIC LETTER MEEM
+    "\ufc53": "\u0647\u0649",  # ARABIC LETTER HEH + ARABIC LETTER ALEF MAKSURA
+    "\ufc54": "\u0647\u064a",  # ARABIC LETTER HEH + ARABIC LETTER YEH
+    "\ufc55": "\u064a\u062c",  # ARABIC LETTER YEH + ARABIC LETTER JEEM
+    "\ufc56": "\u064a\u062d",  # ARABIC LETTER YEH + ARABIC LETTER HAH
+    "\ufc57": "\u064a\u062e",  # ARABIC LETTER YEH + ARABIC LETTER KHAH
+    "\ufc58": "\u064a\u0645",  # ARABIC LETTER YEH + ARABIC LETTER MEEM
+    "\ufc59": "\u064a\u0649",  # ARABIC LETTER YEH + ARABIC LETTER ALEF MAKSURA
+    "\ufc5a": "\u064a\u064a",  # ARABIC LETTER YEH + ARABIC LETTER YEH
+    "\ufc5b": "\u0630\u0670",  # ARABIC LETTER THAL + ARABIC LETTER SUPERSCRIPT ALEF
+    "\ufc5c": "\u0631\u0670",  # ARABIC LETTER REH + ARABIC LETTER SUPERSCRIPT ALEF
+    "\ufc5d": "\u0649\u0670",  # ARABIC LETTER ALEF MAKSURA + ARABIC LETTER SUPERSCRIPT ALEF
+    "\ufc5e": "\u064c\u0651",  # ARABIC DAMMATAN + ARABIC SHADDA
+    "\ufc5f": "\u064d\u0651",  # ARABIC KASRATAN + ARABIC SHADDA
+    "\ufc60": "\u064e\u0651",  # ARABIC FATHA + ARABIC SHADDA
+    "\ufc61": "\u064f\u0651",  # ARABIC DAMMA + ARABIC SHADDA
+    "\ufc62": "\u0650\u0651",  # ARABIC KASRA + ARABIC SHADDA
+    "\ufc63": "\u0651\u0670",  # ARABIC SHADDA + ARABIC LETTER SUPERSCRIPT ALEF
+    "\ufc64": "\u0626\u0631",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER REH
+    "\ufc65": "\u0626\u0632",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER ZAIN
+    "\ufc66": "\u0626\u0645",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER MEEM
+    "\ufc67": "\u0626\u0646",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER NOON
+    "\ufc68": "\u0626\u0649",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER ALEF MAKSURA
+    "\ufc69": "\u0626\u064a",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER YEH
+    "\ufc6a": "\u0628\u0631",  # ARABIC LETTER BEH + ARABIC LETTER REH
+    "\ufc6b": "\u0628\u0632",  # ARABIC LETTER BEH + ARABIC LETTER ZAIN
+    "\ufc6c": "\u0628\u0645",  # ARABIC LETTER BEH + ARABIC LETTER MEEM
+    "\ufc6d": "\u0628\u0646",  # ARABIC LETTER BEH + ARABIC LETTER NOON
+    "\ufc6e": "\u0628\u0649",  # ARABIC LETTER BEH + ARABIC LETTER ALEF MAKSURA
+    "\ufc6f": "\u0628\u064a",  # ARABIC LETTER BEH + ARABIC LETTER YEH
+    "\ufc70": "\u062a\u0631",  # ARABIC LETTER TEH + ARABIC LETTER REH
+    "\ufc71": "\u062a\u0632",  # ARABIC LETTER TEH + ARABIC LETTER ZAIN
+    "\ufc72": "\u062a\u0645",  # ARABIC LETTER TEH + ARABIC LETTER MEEM
+    "\ufc73": "\u062a\u0646",  # ARABIC LETTER TEH + ARABIC LETTER NOON
+    "\ufc74": "\u062a\u0649",  # ARABIC LETTER TEH + ARABIC LETTER ALEF MAKSURA
+    "\ufc75": "\u062a\u064a",  # ARABIC LETTER TEH + ARABIC LETTER YEH
+    "\ufc76": "\u062b\u0631",  # ARABIC LETTER THEH + ARABIC LETTER REH
+    "\ufc77": "\u062b\u0632",  # ARABIC LETTER THEH + ARABIC LETTER ZAIN
+    "\ufc78": "\u062b\u0645",  # ARABIC LETTER THEH + ARABIC LETTER MEEM
+    "\ufc79": "\u062b\u0646",  # ARABIC LETTER THEH + ARABIC LETTER NOON
+    "\ufc7a": "\u062b\u0649",  # ARABIC LETTER THEH + ARABIC LETTER ALEF MAKSURA
+    "\ufc7b": "\u062b\u064a",  # ARABIC LETTER THEH + ARABIC LETTER YEH
+    "\ufc7c": "\u0641\u0649",  # ARABIC LETTER FEH + ARABIC LETTER ALEF MAKSURA
+    "\ufc7d": "\u0641\u064a",  # ARABIC LETTER FEH + ARABIC LETTER YEH
+    "\ufc7e": "\u0642\u0649",  # ARABIC LETTER QAF + ARABIC LETTER ALEF MAKSURA
+    "\ufc7f": "\u0642\u064a",  # ARABIC LETTER QAF + ARABIC LETTER YEH
+    "\ufc80": "\u0643\u0627",  # ARABIC LETTER KAF + ARABIC LETTER ALEF
+    "\ufc81": "\u0643\u0644",  # ARABIC LETTER KAF + ARABIC LETTER LAM
+    "\ufc82": "\u0643\u0645",  # ARABIC LETTER KAF + ARABIC LETTER MEEM
+    "\ufc83": "\u0643\u0649",  # ARABIC LETTER KAF + ARABIC LETTER ALEF MAKSURA
+    "\ufc84": "\u0643\u064a",  # ARABIC LETTER KAF + ARABIC LETTER YEH
+    "\ufc85": "\u0644\u0645",  # ARABIC LETTER LAM + ARABIC LETTER MEEM
+    "\ufc86": "\u0644\u0649",  # ARABIC LETTER LAM + ARABIC LETTER ALEF MAKSURA
+    "\ufc87": "\u0644\u064a",  # ARABIC LETTER LAM + ARABIC LETTER YEH
+    "\ufc88": "\u0645\u0627",  # ARABIC LETTER MEEM + ARABIC LETTER ALEF
+    "\ufc89": "\u0645\u0645",  # ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufc8a": "\u0646\u0631",  # ARABIC LETTER NOON + ARABIC LETTER REH
+    "\ufc8b": "\u0646\u0632",  # ARABIC LETTER NOON + ARABIC LETTER ZAIN
+    "\ufc8c": "\u0646\u0645",  # ARABIC LETTER NOON + ARABIC LETTER MEEM
+    "\ufc8d": "\u0646\u0646",  # ARABIC LETTER NOON + ARABIC LETTER NOON
+    "\ufc8e": "\u0646\u0649",  # ARABIC LETTER NOON + ARABIC LETTER ALEF MAKSURA
+    "\ufc8f": "\u0646\u064a",  # ARABIC LETTER NOON + ARABIC LETTER YEH
+    "\ufc90": "\u0649\u0670",  # ARABIC LETTER ALEF MAKSURA + ARABIC LETTER SUPERSCRIPT ALEF
+    "\ufc91": "\u064a\u0631",  # ARABIC LETTER YEH + ARABIC LETTER REH
+    "\ufc92": "\u064a\u0632",  # ARABIC LETTER YEH + ARABIC LETTER ZAIN
+    "\ufc93": "\u064a\u0645",  # ARABIC LETTER YEH + ARABIC LETTER MEEM
+    "\ufc94": "\u064a\u0646",  # ARABIC LETTER YEH + ARABIC LETTER NOON
+    "\ufc95": "\u064a\u0649",  # ARABIC LETTER YEH + ARABIC LETTER ALEF MAKSURA
+    "\ufc96": "\u064a\u064a",  # ARABIC LETTER YEH + ARABIC LETTER YEH
+    "\ufc97": "\u0626\u062c",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER JEEM
+    "\ufc98": "\u0626\u062d",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER HAH
+    "\ufc99": "\u0626\u062e",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER KHAH
+    "\ufc9a": "\u0626\u0645",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER MEEM
+    "\ufc9b": "\u0626\u0647",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER HEH
+    "\ufc9c": "\u0628\u062c",  # ARABIC LETTER BEH + ARABIC LETTER JEEM
+    "\ufc9d": "\u0628\u062d",  # ARABIC LETTER BEH + ARABIC LETTER HAH
+    "\ufc9e": "\u0628\u062e",  # ARABIC LETTER BEH + ARABIC LETTER KHAH
+    "\ufc9f": "\u0628\u0645",  # ARABIC LETTER BEH + ARABIC LETTER MEEM
+    "\ufca0": "\u0628\u0647",  # ARABIC LETTER BEH + ARABIC LETTER HEH
+    "\ufca1": "\u062a\u062c",  # ARABIC LETTER TEH + ARABIC LETTER JEEM
+    "\ufca2": "\u062a\u062d",  # ARABIC LETTER TEH + ARABIC LETTER HAH
+    "\ufca3": "\u062a\u062e",  # ARABIC LETTER TEH + ARABIC LETTER KHAH
+    "\ufca4": "\u062a\u0645",  # ARABIC LETTER TEH + ARABIC LETTER MEEM
+    "\ufca5": "\u062a\u0647",  # ARABIC LETTER TEH + ARABIC LETTER HEH
+    "\ufca6": "\u062b\u0645",  # ARABIC LETTER THEH + ARABIC LETTER MEEM
+    "\ufca7": "\u062c\u062d",  # ARABIC LETTER JEEM + ARABIC LETTER HAH
+    "\ufca8": "\u062c\u0645",  # ARABIC LETTER JEEM + ARABIC LETTER MEEM
+    "\ufca9": "\u062d\u062c",  # ARABIC LETTER HAH + ARABIC LETTER JEEM
+    "\ufcaa": "\u062d\u0645",  # ARABIC LETTER HAH + ARABIC LETTER MEEM
+    "\ufcab": "\u062e\u062c",  # ARABIC LETTER KHAH + ARABIC LETTER JEEM
+    "\ufcac": "\u062e\u0645",  # ARABIC LETTER KHAH + ARABIC LETTER MEEM
+    "\ufcad": "\u0633\u062c",  # ARABIC LETTER SEEN + ARABIC LETTER JEEM
+    "\ufcae": "\u0633\u062d",  # ARABIC LETTER SEEN + ARABIC LETTER HAH
+    "\ufcaf": "\u0633\u062e",  # ARABIC LETTER SEEN + ARABIC LETTER KHAH
+    "\ufcb0": "\u0633\u0645",  # ARABIC LETTER SEEN + ARABIC LETTER MEEM
+    "\ufcb1": "\u0635\u062d",  # ARABIC LETTER SAD + ARABIC LETTER HAH
+    "\ufcb2": "\u0635\u062e",  # ARABIC LETTER SAD + ARABIC LETTER KHAH
+    "\ufcb3": "\u0635\u0645",  # ARABIC LETTER SAD + ARABIC LETTER MEEM
+    "\ufcb4": "\u0636\u062c",  # ARABIC LETTER DAD + ARABIC LETTER JEEM
+    "\ufcb5": "\u0636\u062d",  # ARABIC LETTER DAD + ARABIC LETTER HAH
+    "\ufcb6": "\u0636\u062e",  # ARABIC LETTER DAD + ARABIC LETTER KHAH
+    "\ufcb7": "\u0636\u0645",  # ARABIC LETTER DAD + ARABIC LETTER MEEM
+    "\ufcb8": "\u0637\u062d",  # ARABIC LETTER TAH + ARABIC LETTER HAH
+    "\ufcb9": "\u0638\u0645",  # ARABIC LETTER ZAH + ARABIC LETTER MEEM
+    "\ufcba": "\u0639\u062c",  # ARABIC LETTER AIN + ARABIC LETTER JEEM
+    "\ufcbb": "\u0639\u0645",  # ARABIC LETTER AIN + ARABIC LETTER MEEM
+    "\ufcbc": "\u063a\u062c",  # ARABIC LETTER GHAIN + ARABIC LETTER JEEM
+    "\ufcbd": "\u063a\u0645",  # ARABIC LETTER GHAIN + ARABIC LETTER MEEM
+    "\ufcbe": "\u0641\u062c",  # ARABIC LETTER FEH + ARABIC LETTER JEEM
+    "\ufcbf": "\u0641\u062d",  # ARABIC LETTER FEH + ARABIC LETTER HAH
+    "\ufcc0": "\u0641\u062e",  # ARABIC LETTER FEH + ARABIC LETTER KHAH
+    "\ufcc1": "\u0641\u0645",  # ARABIC LETTER FEH + ARABIC LETTER MEEM
+    "\ufcc2": "\u0642\u062d",  # ARABIC LETTER QAF + ARABIC LETTER HAH
+    "\ufcc3": "\u0642\u0645",  # ARABIC LETTER QAF + ARABIC LETTER MEEM
+    "\ufcc4": "\u0643\u062c",  # ARABIC LETTER KAF + ARABIC LETTER JEEM
+    "\ufcc5": "\u0643\u062d",  # ARABIC LETTER KAF + ARABIC LETTER HAH
+    "\ufcc6": "\u0643\u062e",  # ARABIC LETTER KAF + ARABIC LETTER KHAH
+    "\ufcc7": "\u0643\u0644",  # ARABIC LETTER KAF + ARABIC LETTER LAM
+    "\ufcc8": "\u0643\u0645",  # ARABIC LETTER KAF + ARABIC LETTER MEEM
+    "\ufcc9": "\u0644\u062c",  # ARABIC LETTER LAM + ARABIC LETTER JEEM
+    "\ufcca": "\u0644\u062d",  # ARABIC LETTER LAM + ARABIC LETTER HAH
+    "\ufccb": "\u0644\u062e",  # ARABIC LETTER LAM + ARABIC LETTER KHAH
+    "\ufccc": "\u0644\u0645",  # ARABIC LETTER LAM + ARABIC LETTER MEEM
+    "\ufccd": "\u0644\u0647",  # ARABIC LETTER LAM + ARABIC LETTER HEH
+    "\ufcce": "\u0645\u062c",  # ARABIC LETTER MEEM + ARABIC LETTER JEEM
+    "\ufccf": "\u0645\u062d",  # ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufcd0": "\u0645\u062e",  # ARABIC LETTER MEEM + ARABIC LETTER KHAH
+    "\ufcd1": "\u0645\u0645",  # ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufcd2": "\u0646\u062c",  # ARABIC LETTER NOON + ARABIC LETTER JEEM
+    "\ufcd3": "\u0646\u062d",  # ARABIC LETTER NOON + ARABIC LETTER HAH
+    "\ufcd4": "\u0646\u062e",  # ARABIC LETTER NOON + ARABIC LETTER KHAH
+    "\ufcd5": "\u0646\u0645",  # ARABIC LETTER NOON + ARABIC LETTER MEEM
+    "\ufcd6": "\u0646\u0647",  # ARABIC LETTER NOON + ARABIC LETTER HEH
+    "\ufcd7": "\u0647\u062c",  # ARABIC LETTER HEH + ARABIC LETTER JEEM
+    "\ufcd8": "\u0647\u0645",  # ARABIC LETTER HEH + ARABIC LETTER MEEM
+    "\ufcd9": "\u0647\u0670",  # ARABIC LETTER HEH + ARABIC LETTER SUPERSCRIPT ALEF
+    "\ufcda": "\u064a\u062c",  # ARABIC LETTER YEH + ARABIC LETTER JEEM
+    "\ufcdb": "\u064a\u062d",  # ARABIC LETTER YEH + ARABIC LETTER HAH
+    "\ufcdc": "\u064a\u062e",  # ARABIC LETTER YEH + ARABIC LETTER KHAH
+    "\ufcdd": "\u064a\u0645",  # ARABIC LETTER YEH + ARABIC LETTER MEEM
+    "\ufcde": "\u064a\u0647",  # ARABIC LETTER YEH + ARABIC LETTER HEH
+    "\ufcdf": "\u0626\u0645",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER MEEM
+    "\ufce0": "\u0626\u0647",  # ARABIC LETTER YEH WITH HAMZA ABOVE + ARABIC LETTER HEH
+    "\ufce1": "\u0628\u0645",  # ARABIC LETTER BEH + ARABIC LETTER MEEM
+    "\ufce2": "\u0628\u0647",  # ARABIC LETTER BEH + ARABIC LETTER HEH
+    "\ufce3": "\u062a\u0645",  # ARABIC LETTER TEH + ARABIC LETTER MEEM
+    "\ufce4": "\u062a\u0647",  # ARABIC LETTER TEH + ARABIC LETTER HEH
+    "\ufce5": "\u062b\u0645",  # ARABIC LETTER THEH + ARABIC LETTER MEEM
+    "\ufce6": "\u062b\u0647",  # ARABIC LETTER THEH + ARABIC LETTER HEH
+    "\ufce7": "\u0633\u0645",  # ARABIC LETTER SEEN + ARABIC LETTER MEEM
+    "\ufce8": "\u0633\u0647",  # ARABIC LETTER SEEN + ARABIC LETTER HEH
+    "\ufce9": "\u0634\u0645",  # ARABIC LETTER SHEEN + ARABIC LETTER MEEM
+    "\ufcea": "\u0634\u0647",  # ARABIC LETTER SHEEN + ARABIC LETTER HEH
+    "\ufceb": "\u0643\u0644",  # ARABIC LETTER KAF + ARABIC LETTER LAM
+    "\ufcec": "\u0643\u0645",  # ARABIC LETTER KAF + ARABIC LETTER MEEM
+    "\ufced": "\u0644\u0645",  # ARABIC LETTER LAM + ARABIC LETTER MEEM
+    "\ufcee": "\u0646\u0645",  # ARABIC LETTER NOON + ARABIC LETTER MEEM
+    "\ufcef": "\u0646\u0647",  # ARABIC LETTER NOON + ARABIC LETTER HEH
+    "\ufcf0": "\u064a\u0645",  # ARABIC LETTER YEH + ARABIC LETTER MEEM
+    "\ufcf1": "\u064a\u0647",  # ARABIC LETTER YEH + ARABIC LETTER HEH
+    "\ufcf2": "\u064e\u0651",  # ARABIC FATHA + ARABIC SHADDA
+    "\ufcf3": "\u064f\u0651",  # ARABIC DAMMA + ARABIC SHADDA
+    "\ufcf4": "\u0650\u0651",  # ARABIC KASRA + ARABIC SHADDA
+    "\ufcf5": "\u0637\u0649",  # ARABIC LETTER TAH + ARABIC LETTER ALEF MAKSURA
+    "\ufcf6": "\u0637\u064a",  # ARABIC LETTER TAH + ARABIC LETTER YEH
+    "\ufcf7": "\u0639\u0649",  # ARABIC LETTER AIN + ARABIC LETTER ALEF MAKSURA
+    "\ufcf8": "\u0639\u064a",  # ARABIC LETTER AIN + ARABIC LETTER YEH
+    "\ufcf9": "\u063a\u0649",  # ARABIC LETTER GHAIN + ARABIC LETTER ALEF MAKSURA
+    "\ufcfa": "\u063a\u064a",  # ARABIC LETTER GHAIN + ARABIC LETTER YEH
+    "\ufcfb": "\u0633\u0649",  # ARABIC LETTER SEEN + ARABIC LETTER ALEF MAKSURA
+    "\ufcfc": "\u0633\u064a",  # ARABIC LETTER SEEN + ARABIC LETTER YEH
+    "\ufcfd": "\u0634\u0649",  # ARABIC LETTER SHEEN + ARABIC LETTER ALEF MAKSURA
+    "\ufcfe": "\u0634\u064a",  # ARABIC LETTER SHEEN + ARABIC LETTER YEH
+    "\ufcff": "\u062d\u0649",  # ARABIC LETTER HAH + ARABIC LETTER ALEF MAKSURA
+    "\ufd00": "\u062d\u064a",  # ARABIC LETTER HAH + ARABIC LETTER YEH
+    "\ufd01": "\u062c\u0649",  # ARABIC LETTER JEEM + ARABIC LETTER ALEF MAKSURA
+    "\ufd02": "\u062c\u064a",  # ARABIC LETTER JEEM + ARABIC LETTER YEH
+    "\ufd03": "\u062e\u0649",  # ARABIC LETTER KHAH + ARABIC LETTER ALEF MAKSURA
+    "\ufd04": "\u062e\u064a",  # ARABIC LETTER KHAH + ARABIC LETTER YEH
+    "\ufd05": "\u0635\u0649",  # ARABIC LETTER SAD + ARABIC LETTER ALEF MAKSURA
+    "\ufd06": "\u0635\u064a",  # ARABIC LETTER SAD + ARABIC LETTER YEH
+    "\ufd07": "\u0636\u0649",  # ARABIC LETTER DAD + ARABIC LETTER ALEF MAKSURA
+    "\ufd08": "\u0636\u064a",  # ARABIC LETTER DAD + ARABIC LETTER YEH
+    "\ufd09": "\u0634\u062c",  # ARABIC LETTER SHEEN + ARABIC LETTER JEEM
+    "\ufd0a": "\u0634\u062d",  # ARABIC LETTER SHEEN + ARABIC LETTER HAH
+    "\ufd0b": "\u0634\u062e",  # ARABIC LETTER SHEEN + ARABIC LETTER KHAH
+    "\ufd0c": "\u0634\u0645",  # ARABIC LETTER SHEEN + ARABIC LETTER MEEM
+    "\ufd0d": "\u0634\u0631",  # ARABIC LETTER SHEEN + ARABIC LETTER REH
+    "\ufd0e": "\u0633\u0631",  # ARABIC LETTER SEEN + ARABIC LETTER REH
+    "\ufd0f": "\u0635\u0631",  # ARABIC LETTER SAD + ARABIC LETTER REH
+    "\ufd10": "\u0636\u0631",  # ARABIC LETTER DAD + ARABIC LETTER REH
+    "\ufd11": "\u0637\u0649",  # ARABIC LETTER TAH + ARABIC LETTER ALEF MAKSURA
+    "\ufd12": "\u0637\u064a",  # ARABIC LETTER TAH + ARABIC LETTER YEH
+    "\ufd13": "\u0639\u0649",  # ARABIC LETTER AIN + ARABIC LETTER ALEF MAKSURA
+    "\ufd14": "\u0639\u064a",  # ARABIC LETTER AIN + ARABIC LETTER YEH
+    "\ufd15": "\u063a\u0649",  # ARABIC LETTER GHAIN + ARABIC LETTER ALEF MAKSURA
+    "\ufd16": "\u063a\u064a",  # ARABIC LETTER GHAIN + ARABIC LETTER YEH
+    "\ufd17": "\u0633\u0649",  # ARABIC LETTER SEEN + ARABIC LETTER ALEF MAKSURA
+    "\ufd18": "\u0633\u064a",  # ARABIC LETTER SEEN + ARABIC LETTER YEH
+    "\ufd19": "\u0634\u0649",  # ARABIC LETTER SHEEN + ARABIC LETTER ALEF MAKSURA
+    "\ufd1a": "\u0634\u064a",  # ARABIC LETTER SHEEN + ARABIC LETTER YEH
+    "\ufd1b": "\u062d\u0649",  # ARABIC LETTER HAH + ARABIC LETTER ALEF MAKSURA
+    "\ufd1c": "\u062d\u064a",  # ARABIC LETTER HAH + ARABIC LETTER YEH
+    "\ufd1d": "\u062c\u0649",  # ARABIC LETTER JEEM + ARABIC LETTER ALEF MAKSURA
+    "\ufd1e": "\u062c\u064a",  # ARABIC LETTER JEEM + ARABIC LETTER YEH
+    "\ufd1f": "\u062e\u0649",  # ARABIC LETTER KHAH + ARABIC LETTER ALEF MAKSURA
+    "\ufd20": "\u062e\u064a",  # ARABIC LETTER KHAH + ARABIC LETTER YEH
+    "\ufd21": "\u0635\u0649",  # ARABIC LETTER SAD + ARABIC LETTER ALEF MAKSURA
+    "\ufd22": "\u0635\u064a",  # ARABIC LETTER SAD + ARABIC LETTER YEH
+    "\ufd23": "\u0636\u0649",  # ARABIC LETTER DAD + ARABIC LETTER ALEF MAKSURA
+    "\ufd24": "\u0636\u064a",  # ARABIC LETTER DAD + ARABIC LETTER YEH
+    "\ufd25": "\u0634\u062c",  # ARABIC LETTER SHEEN + ARABIC LETTER JEEM
+    "\ufd26": "\u0634\u062d",  # ARABIC LETTER SHEEN + ARABIC LETTER HAH
+    "\ufd27": "\u0634\u062e",  # ARABIC LETTER SHEEN + ARABIC LETTER KHAH
+    "\ufd28": "\u0634\u0645",  # ARABIC LETTER SHEEN + ARABIC LETTER MEEM
+    "\ufd29": "\u0634\u0631",  # ARABIC LETTER SHEEN + ARABIC LETTER REH
+    "\ufd2a": "\u0633\u0631",  # ARABIC LETTER SEEN + ARABIC LETTER REH
+    "\ufd2b": "\u0635\u0631",  # ARABIC LETTER SAD + ARABIC LETTER REH
+    "\ufd2c": "\u0636\u0631",  # ARABIC LETTER DAD + ARABIC LETTER REH
+    "\ufd2d": "\u0634\u062c",  # ARABIC LETTER SHEEN + ARABIC LETTER JEEM
+    "\ufd2e": "\u0634\u062d",  # ARABIC LETTER SHEEN + ARABIC LETTER HAH
+    "\ufd2f": "\u0634\u062e",  # ARABIC LETTER SHEEN + ARABIC LETTER KHAH
+    "\ufd30": "\u0634\u0645",  # ARABIC LETTER SHEEN + ARABIC LETTER MEEM
+    "\ufd31": "\u0633\u0647",  # ARABIC LETTER SEEN + ARABIC LETTER HEH
+    "\ufd32": "\u0634\u0647",  # ARABIC LETTER SHEEN + ARABIC LETTER HEH
+    "\ufd33": "\u0637\u0645",  # ARABIC LETTER TAH + ARABIC LETTER MEEM
+    "\ufd34": "\u0633\u062c",  # ARABIC LETTER SEEN + ARABIC LETTER JEEM
+    "\ufd35": "\u0633\u062d",  # ARABIC LETTER SEEN + ARABIC LETTER HAH
+    "\ufd36": "\u0633\u062e",  # ARABIC LETTER SEEN + ARABIC LETTER KHAH
+    "\ufd37": "\u0634\u062c",  # ARABIC LETTER SHEEN + ARABIC LETTER JEEM
+    "\ufd38": "\u0634\u062d",  # ARABIC LETTER SHEEN + ARABIC LETTER HAH
+    "\ufd39": "\u0634\u062e",  # ARABIC LETTER SHEEN + ARABIC LETTER KHAH
+    "\ufd3a": "\u0637\u0645",  # ARABIC LETTER TAH + ARABIC LETTER MEEM
+    "\ufd3b": "\u0638\u0645",  # ARABIC LETTER ZAH + ARABIC LETTER MEEM
+    "\ufd3c": "\u0627\u064b",  # ARABIC LETTER ALEF + ARABIC FATHATAN
+    "\ufd3d": "\u0627\u064b",  # ARABIC LETTER ALEF + ARABIC FATHATAN
+    # three-letter contextual ligatures (U+FD50-FD8F)
+    "\ufd50": "\u062a\u062c\u0645",  # ARABIC LETTER TEH + ARABIC LETTER JEEM + ARABIC LETTER MEEM
+    "\ufd51": "\u062a\u062d\u062c",  # ARABIC LETTER TEH + ARABIC LETTER HAH + ARABIC LETTER JEEM
+    "\ufd52": "\u062a\u062d\u062c",  # ARABIC LETTER TEH + ARABIC LETTER HAH + ARABIC LETTER JEEM
+    "\ufd53": "\u062a\u062d\u0645",  # ARABIC LETTER TEH + ARABIC LETTER HAH + ARABIC LETTER MEEM
+    "\ufd54": "\u062a\u062e\u0645",  # ARABIC LETTER TEH + ARABIC LETTER KHAH + ARABIC LETTER MEEM
+    "\ufd55": "\u062a\u0645\u062c",  # ARABIC LETTER TEH + ARABIC LETTER MEEM + ARABIC LETTER JEEM
+    "\ufd56": "\u062a\u0645\u062d",  # ARABIC LETTER TEH + ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufd57": "\u062a\u0645\u062e",  # ARABIC LETTER TEH + ARABIC LETTER MEEM + ARABIC LETTER KHAH
+    "\ufd58": "\u062c\u0645\u062d",  # ARABIC LETTER JEEM + ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufd59": "\u062c\u0645\u062d",  # ARABIC LETTER JEEM + ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufd5a": "\u062d\u0645\u064a",  # ARABIC LETTER HAH + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    # ARABIC LETTER HAH + ARABIC LETTER MEEM + ARABIC LETTER ALEF MAKSURA
+    "\ufd5b": "\u062d\u0645\u0649",
+    "\ufd5c": "\u0633\u062d\u062c",  # ARABIC LETTER SEEN + ARABIC LETTER HAH + ARABIC LETTER JEEM
+    "\ufd5d": "\u0633\u062c\u062d",  # ARABIC LETTER SEEN + ARABIC LETTER JEEM + ARABIC LETTER HAH
+    # ARABIC LETTER SEEN + ARABIC LETTER JEEM + ARABIC LETTER ALEF MAKSURA
+    "\ufd5e": "\u0633\u062c\u0649",
+    "\ufd5f": "\u0633\u0645\u062d",  # ARABIC LETTER SEEN + ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufd60": "\u0633\u0645\u062d",  # ARABIC LETTER SEEN + ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufd61": "\u0633\u0645\u062c",  # ARABIC LETTER SEEN + ARABIC LETTER MEEM + ARABIC LETTER JEEM
+    "\ufd62": "\u0633\u0645\u0645",  # ARABIC LETTER SEEN + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufd63": "\u0633\u0645\u0645",  # ARABIC LETTER SEEN + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufd64": "\u0635\u062d\u062d",  # ARABIC LETTER SAD + ARABIC LETTER HAH + ARABIC LETTER HAH
+    "\ufd65": "\u0635\u062d\u062d",  # ARABIC LETTER SAD + ARABIC LETTER HAH + ARABIC LETTER HAH
+    "\ufd66": "\u0635\u0645\u0645",  # ARABIC LETTER SAD + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufd67": "\u0634\u062d\u0645",  # ARABIC LETTER SHEEN + ARABIC LETTER HAH + ARABIC LETTER MEEM
+    "\ufd68": "\u0634\u062d\u0645",  # ARABIC LETTER SHEEN + ARABIC LETTER HAH + ARABIC LETTER MEEM
+    "\ufd69": "\u0634\u062c\u064a",  # ARABIC LETTER SHEEN + ARABIC LETTER JEEM + ARABIC LETTER YEH
+    "\ufd6a": "\u0634\u0645\u062e",  # ARABIC LETTER SHEEN + ARABIC LETTER MEEM + ARABIC LETTER KHAH
+    "\ufd6b": "\u0634\u0645\u062e",  # ARABIC LETTER SHEEN + ARABIC LETTER MEEM + ARABIC LETTER KHAH
+    "\ufd6c": "\u0634\u0645\u0645",  # ARABIC LETTER SHEEN + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufd6d": "\u0634\u0645\u0645",  # ARABIC LETTER SHEEN + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    # ARABIC LETTER DAD + ARABIC LETTER HAH + ARABIC LETTER ALEF MAKSURA
+    "\ufd6e": "\u0636\u062d\u0649",
+    "\ufd6f": "\u0636\u062e\u0645",  # ARABIC LETTER DAD + ARABIC LETTER KHAH + ARABIC LETTER MEEM
+    "\ufd70": "\u0636\u062e\u0645",  # ARABIC LETTER DAD + ARABIC LETTER KHAH + ARABIC LETTER MEEM
+    "\ufd71": "\u0637\u0645\u062d",  # ARABIC LETTER TAH + ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufd72": "\u0637\u0645\u062d",  # ARABIC LETTER TAH + ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufd73": "\u0637\u0645\u0645",  # ARABIC LETTER TAH + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufd74": "\u0637\u0645\u064a",  # ARABIC LETTER TAH + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    "\ufd75": "\u0639\u062c\u0645",  # ARABIC LETTER AIN + ARABIC LETTER JEEM + ARABIC LETTER MEEM
+    "\ufd76": "\u0639\u0645\u0645",  # ARABIC LETTER AIN + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufd77": "\u0639\u0645\u0645",  # ARABIC LETTER AIN + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    # ARABIC LETTER AIN + ARABIC LETTER MEEM + ARABIC LETTER ALEF MAKSURA
+    "\ufd78": "\u0639\u0645\u0649",
+    "\ufd79": "\u063a\u0645\u0645",  # ARABIC LETTER GHAIN + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufd7a": "\u063a\u0645\u064a",  # ARABIC LETTER GHAIN + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    # ARABIC LETTER GHAIN + ARABIC LETTER MEEM + ARABIC LETTER ALEF MAKSURA
+    "\ufd7b": "\u063a\u0645\u0649",
+    "\ufd7c": "\u0641\u062e\u0645",  # ARABIC LETTER FEH + ARABIC LETTER KHAH + ARABIC LETTER MEEM
+    "\ufd7d": "\u0641\u062e\u0645",  # ARABIC LETTER FEH + ARABIC LETTER KHAH + ARABIC LETTER MEEM
+    "\ufd7e": "\u0642\u0645\u062d",  # ARABIC LETTER QAF + ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufd7f": "\u0642\u0645\u0645",  # ARABIC LETTER QAF + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufd80": "\u0644\u062d\u0645",  # ARABIC LETTER LAM + ARABIC LETTER HAH + ARABIC LETTER MEEM
+    "\ufd81": "\u0644\u062d\u064a",  # ARABIC LETTER LAM + ARABIC LETTER HAH + ARABIC LETTER YEH
+    # ARABIC LETTER LAM + ARABIC LETTER HAH + ARABIC LETTER ALEF MAKSURA
+    "\ufd82": "\u0644\u062d\u0649",
+    "\ufd83": "\u0644\u062c\u062c",  # ARABIC LETTER LAM + ARABIC LETTER JEEM + ARABIC LETTER JEEM
+    "\ufd84": "\u0644\u062c\u062c",  # ARABIC LETTER LAM + ARABIC LETTER JEEM + ARABIC LETTER JEEM
+    "\ufd85": "\u0644\u062e\u0645",  # ARABIC LETTER LAM + ARABIC LETTER KHAH + ARABIC LETTER MEEM
+    "\ufd86": "\u0644\u062e\u0645",  # ARABIC LETTER LAM + ARABIC LETTER KHAH + ARABIC LETTER MEEM
+    "\ufd87": "\u0644\u0645\u062d",  # ARABIC LETTER LAM + ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufd88": "\u0644\u0645\u062d",  # ARABIC LETTER LAM + ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufd89": "\u0645\u062d\u062c",  # ARABIC LETTER MEEM + ARABIC LETTER HAH + ARABIC LETTER JEEM
+    "\ufd8a": "\u0645\u062d\u0645",  # ARABIC LETTER MEEM + ARABIC LETTER HAH + ARABIC LETTER MEEM
+    "\ufd8b": "\u0645\u062d\u064a",  # ARABIC LETTER MEEM + ARABIC LETTER HAH + ARABIC LETTER YEH
+    "\ufd8c": "\u0645\u062c\u062d",  # ARABIC LETTER MEEM + ARABIC LETTER JEEM + ARABIC LETTER HAH
+    "\ufd8d": "\u0645\u062c\u0645",  # ARABIC LETTER MEEM + ARABIC LETTER JEEM + ARABIC LETTER MEEM
+    "\ufd8e": "\u0645\u062e\u062c",  # ARABIC LETTER MEEM + ARABIC LETTER KHAH + ARABIC LETTER JEEM
+    "\ufd8f": "\u0645\u062e\u0645",  # ARABIC LETTER MEEM + ARABIC LETTER KHAH + ARABIC LETTER MEEM
+    # three-letter contextual ligatures (U+FD92-FDC7)
+    "\ufd92": "\u0645\u062c\u062e",  # ARABIC LETTER MEEM + ARABIC LETTER JEEM + ARABIC LETTER KHAH
+    "\ufd93": "\u0647\u0645\u062c",  # ARABIC LETTER HEH + ARABIC LETTER MEEM + ARABIC LETTER JEEM
+    "\ufd94": "\u0647\u0645\u0645",  # ARABIC LETTER HEH + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufd95": "\u0646\u062d\u0645",  # ARABIC LETTER NOON + ARABIC LETTER HAH + ARABIC LETTER MEEM
+    # ARABIC LETTER NOON + ARABIC LETTER HAH + ARABIC LETTER ALEF MAKSURA
+    "\ufd96": "\u0646\u062d\u0649",
+    "\ufd97": "\u0646\u062c\u0645",  # ARABIC LETTER NOON + ARABIC LETTER JEEM + ARABIC LETTER MEEM
+    "\ufd98": "\u0646\u062c\u0645",  # ARABIC LETTER NOON + ARABIC LETTER JEEM + ARABIC LETTER MEEM
+    # ARABIC LETTER NOON + ARABIC LETTER JEEM + ARABIC LETTER ALEF MAKSURA
+    "\ufd99": "\u0646\u062c\u0649",
+    "\ufd9a": "\u0646\u0645\u064a",  # ARABIC LETTER NOON + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    # ARABIC LETTER NOON + ARABIC LETTER MEEM + ARABIC LETTER ALEF MAKSURA
+    "\ufd9b": "\u0646\u0645\u0649",
+    "\ufd9c": "\u064a\u0645\u0645",  # ARABIC LETTER YEH + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufd9d": "\u064a\u0645\u0645",  # ARABIC LETTER YEH + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufd9e": "\u0628\u062e\u064a",  # ARABIC LETTER BEH + ARABIC LETTER KHAH + ARABIC LETTER YEH
+    "\ufd9f": "\u062a\u062c\u064a",  # ARABIC LETTER TEH + ARABIC LETTER JEEM + ARABIC LETTER YEH
+    # ARABIC LETTER TEH + ARABIC LETTER JEEM + ARABIC LETTER ALEF MAKSURA
+    "\ufda0": "\u062a\u062c\u0649",
+    "\ufda1": "\u062a\u062e\u064a",  # ARABIC LETTER TEH + ARABIC LETTER KHAH + ARABIC LETTER YEH
+    # ARABIC LETTER TEH + ARABIC LETTER KHAH + ARABIC LETTER ALEF MAKSURA
+    "\ufda2": "\u062a\u062e\u0649",
+    "\ufda3": "\u062a\u0645\u064a",  # ARABIC LETTER TEH + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    # ARABIC LETTER TEH + ARABIC LETTER MEEM + ARABIC LETTER ALEF MAKSURA
+    "\ufda4": "\u062a\u0645\u0649",
+    "\ufda5": "\u062c\u0645\u064a",  # ARABIC LETTER JEEM + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    # ARABIC LETTER JEEM + ARABIC LETTER HAH + ARABIC LETTER ALEF MAKSURA
+    "\ufda6": "\u062c\u062d\u0649",
+    # ARABIC LETTER JEEM + ARABIC LETTER MEEM + ARABIC LETTER ALEF MAKSURA
+    "\ufda7": "\u062c\u0645\u0649",
+    # ARABIC LETTER SEEN + ARABIC LETTER KHAH + ARABIC LETTER ALEF MAKSURA
+    "\ufda8": "\u0633\u062e\u0649",
+    "\ufda9": "\u0635\u062d\u064a",  # ARABIC LETTER SAD + ARABIC LETTER HAH + ARABIC LETTER YEH
+    "\ufdaa": "\u0634\u062d\u064a",  # ARABIC LETTER SHEEN + ARABIC LETTER HAH + ARABIC LETTER YEH
+    "\ufdab": "\u0636\u062d\u064a",  # ARABIC LETTER DAD + ARABIC LETTER HAH + ARABIC LETTER YEH
+    "\ufdac": "\u0644\u062c\u064a",  # ARABIC LETTER LAM + ARABIC LETTER JEEM + ARABIC LETTER YEH
+    "\ufdad": "\u0644\u0645\u064a",  # ARABIC LETTER LAM + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    "\ufdae": "\u064a\u062d\u064a",  # ARABIC LETTER YEH + ARABIC LETTER HAH + ARABIC LETTER YEH
+    "\ufdaf": "\u064a\u062c\u064a",  # ARABIC LETTER YEH + ARABIC LETTER JEEM + ARABIC LETTER YEH
+    "\ufdb0": "\u064a\u0645\u064a",  # ARABIC LETTER YEH + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    "\ufdb1": "\u0645\u0645\u064a",  # ARABIC LETTER MEEM + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    "\ufdb2": "\u0642\u0645\u064a",  # ARABIC LETTER QAF + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    "\ufdb3": "\u0646\u062d\u064a",  # ARABIC LETTER NOON + ARABIC LETTER HAH + ARABIC LETTER YEH
+    "\ufdb4": "\u0642\u0645\u062d",  # ARABIC LETTER QAF + ARABIC LETTER MEEM + ARABIC LETTER HAH
+    "\ufdb5": "\u0644\u062d\u0645",  # ARABIC LETTER LAM + ARABIC LETTER HAH + ARABIC LETTER MEEM
+    "\ufdb6": "\u0639\u0645\u064a",  # ARABIC LETTER AIN + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    "\ufdb7": "\u0643\u0645\u064a",  # ARABIC LETTER KAF + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    "\ufdb8": "\u0646\u062c\u062d",  # ARABIC LETTER NOON + ARABIC LETTER JEEM + ARABIC LETTER HAH
+    "\ufdb9": "\u0645\u062e\u064a",  # ARABIC LETTER MEEM + ARABIC LETTER KHAH + ARABIC LETTER YEH
+    "\ufdba": "\u0644\u062c\u0645",  # ARABIC LETTER LAM + ARABIC LETTER JEEM + ARABIC LETTER MEEM
+    "\ufdbb": "\u0643\u0645\u0645",  # ARABIC LETTER KAF + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufdbc": "\u0644\u062c\u0645",  # ARABIC LETTER LAM + ARABIC LETTER JEEM + ARABIC LETTER MEEM
+    "\ufdbd": "\u0646\u062c\u062d",  # ARABIC LETTER NOON + ARABIC LETTER JEEM + ARABIC LETTER HAH
+    "\ufdbe": "\u062c\u062d\u064a",  # ARABIC LETTER JEEM + ARABIC LETTER HAH + ARABIC LETTER YEH
+    "\ufdbf": "\u062d\u062c\u064a",  # ARABIC LETTER HAH + ARABIC LETTER JEEM + ARABIC LETTER YEH
+    "\ufdc0": "\u0645\u062c\u064a",  # ARABIC LETTER MEEM + ARABIC LETTER JEEM + ARABIC LETTER YEH
+    "\ufdc1": "\u0641\u0645\u064a",  # ARABIC LETTER FEH + ARABIC LETTER MEEM + ARABIC LETTER YEH
+    "\ufdc2": "\u0628\u062d\u064a",  # ARABIC LETTER BEH + ARABIC LETTER HAH + ARABIC LETTER YEH
+    "\ufdc3": "\u0643\u0645\u0645",  # ARABIC LETTER KAF + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufdc4": "\u0639\u062c\u0645",  # ARABIC LETTER AIN + ARABIC LETTER JEEM + ARABIC LETTER MEEM
+    "\ufdc5": "\u0635\u0645\u0645",  # ARABIC LETTER SAD + ARABIC LETTER MEEM + ARABIC LETTER MEEM
+    "\ufdc6": "\u0633\u062e\u064a",  # ARABIC LETTER SEEN + ARABIC LETTER KHAH + ARABIC LETTER YEH
+    "\ufdc7": "\u0646\u062c\u064a",  # ARABIC LETTER NOON + ARABIC LETTER JEEM + ARABIC LETTER YEH
+    # deleted: honorifics, invocations, phrases, standalone words
+    # U+FBC3-FBD2, U+FD90-FD91, U+FDC8-FDCE (Unicode 17.0 additions):
+    "\ufbc3": "",  # deleted: honorific (JALLA WA-ALAA)
+    "\ufbc4": "",  # deleted: honorific (DAAMAT BARAKAATUHUM)
+    "\ufbc5": "",  # deleted: honorific (RAHMATU ALLAAHI TAAALAA ALAYH)
+    "\ufbc6": "",  # deleted: honorific (RAHMATU ALLAAHI ALAYHIM)
+    "\ufbc7": "",  # deleted: honorific (RAHMATU ALLAAHI ALAYHIMAA)
+    "\ufbc8": "",  # deleted: honorific (RAHIMAHUM ALLAAHU TAAALAA)
+    "\ufbc9": "",  # deleted: honorific (RAHIMAHUMAA ALLAAH)
+    "\ufbca": "",  # deleted: honorific (RAHIMAHUMAA ALLAAHU TAAALAA)
+    "\ufbcb": "",  # deleted: honorific (RADI ALLAAHU TAAALAA ANHUM)
+    "\ufbcc": "",  # deleted: honorific (HAFIZAHU ALLAAH)
+    "\ufbcd": "",  # deleted: honorific (HAFIZAHU ALLAAHU TAAALAA)
+    "\ufbce": "",  # deleted: honorific (HAFIZAHUM ALLAAHU TAAALAA)
+    "\ufbcf": "",  # deleted: honorific (HAFIZAHUMAA ALLAAHU TAAALAA)
+    "\ufbd0": "",  # deleted: honorific (SALLALLAAHU TAAALAA ALAYHI WA-SALLAM)
+    "\ufbd1": "",  # deleted: honorific (AJJAL ALLAAHU FARAJAHU ASH-SHAREEF)
+    "\ufbd2": "",  # deleted: honorific (ALAYHI AR-RAHMAH)
+    "\ufd90": "",  # deleted: honorific (RAHMATU ALLAAHI ALAYH)
+    "\ufd91": "",  # deleted: honorific (RAHMATU ALLAAHI ALAYHAA)
+    "\ufdc8": "",  # deleted: honorific (RAHIMAHU ALLAAH TAAALAA)
+    "\ufdc9": "",  # deleted: honorific (RADI ALLAAHU TAAALAA ANH)
+    "\ufdca": "",  # deleted: honorific (RADI ALLAAHU TAAALAA ANHAA)
+    "\ufdcb": "",  # deleted: honorific (RADI ALLAAHU TAAALAA ANHUMAA)
+    "\ufdcc": "",  # deleted: honorific (SALLALLAHU ALAYHI WA-ALAA AALIHEE WA-SALLAM)
+    "\ufdcd": "",  # deleted: honorific (AJJAL ALLAAHU TAAALAA FARAJAHU ASH-SHAREEF)
+    "\ufdce": "",  # deleted: honorific (KARRAMA ALLAAHU WAJHAH)
+    # U+FD40-FD4F:
+    "\ufd40": "",  # deleted: honorific (RAHIMAHU ALLAAH)
+    "\ufd41": "",  # deleted: honorific (RADI ALLAAHU ANH)
+    "\ufd42": "",  # deleted: honorific (RADI ALLAAHU ANHAA)
+    "\ufd43": "",  # deleted: honorific (RADI ALLAAHU ANHUM)
+    "\ufd44": "",  # deleted: honorific (RADI ALLAAHU ANHUMAA)
+    "\ufd45": "",  # deleted: honorific (RADI ALLAAHU ANHUNNA)
+    "\ufd46": "",  # deleted: honorific (SALLALLAAHU ALAYHI WA-AALIH)
+    "\ufd47": "",  # deleted: honorific (ALAYHI AS-SALAAM)
+    "\ufd48": "",  # deleted: honorific (ALAYHIM AS-SALAAM)
+    "\ufd49": "",  # deleted: honorific (ALAYHIMAA AS-SALAAM)
+    "\ufd4a": "",  # deleted: honorific (ALAYHI AS-SALAATU WAS-SALAAM)
+    "\ufd4b": "",  # deleted: honorific (QUDDISA SIRRAH)
+    "\ufd4c": "",  # deleted: honorific (SALLALLAHU ALAYHI WAAALIHEE WA-SALLAM)
+    "\ufd4d": "",  # deleted: honorific (ALAYHAA AS-SALAAM)
+    "\ufd4e": "",  # deleted: honorific (TABAARAKA WA-TAAALAA)
+    "\ufd4f": "",  # deleted: honorific (RAHIMAHUM ALLAAH)
+    # U+FDCF:
+    "\ufdcf": "",  # deleted: honorific (SALAAMUHU ALAYNAA)
+    # U+FDF0-FDFB:
+    "\ufdf0": "",  # deleted: Koranic stop sign (SALLA)
+    "\ufdf1": "",  # deleted: Koranic stop sign (QALA)
+    "\ufdf2": "",  # deleted: standalone word (ALLAH)
+    "\ufdf3": "",  # deleted: standalone word (AKBAR)
+    "\ufdf4": "",  # deleted: standalone word (MOHAMMAD)
+    "\ufdf5": "",  # deleted: standalone word (SALAM)
+    "\ufdf6": "",  # deleted: standalone word (RASOUL)
+    "\ufdf7": "",  # deleted: standalone word (ALAYHE)
+    "\ufdf8": "",  # deleted: standalone word (WASALLAM)
+    "\ufdf9": "",  # deleted: standalone word (SALLA)
+    "\ufdfa": "",  # deleted: phrase (SALLALLAHOU ALAYHE WASALLAM)
+    "\ufdfb": "",  # deleted: phrase (JALLAJALALOUHOU)
+    # U+FDFD-FDFF:
+    "\ufdfd": "",  # deleted: phrase (BISMILLAH AR-RAHMAN AR-RAHEEM)
+    "\ufdfe": "",  # deleted: phrase (SUBHAANAHU WA TAAALAA)
+    "\ufdff": "",  # deleted: phrase (AZZA WA JALL)
+}
 # LIGATURE MAP END
 """
-Arabic presentation-form ligature mapping, built at import time from the
-Unicode decomposition fields (see :py:func:`romanalfaz.urduspell._buildLigatureMap`).
+Static Arabic presentation-form ligature mapping, authored as literals from
+the Unicode decomposition data (unicodedataplus 16.0.0, in the pattern of
+:data:`romanalfaz.urduspell.URDU_VARIANT_MAP`), plus the Unicode 17.0
+additions noted inline.
 
-Keys are the 494 assigned ligature codepoints of the two presentation-form
-blocks minus the 14 excluded ones; values are base-character sequences (448
-entries) or the empty string (32 honorific/phrase entries). Mark-bearing
-decompositions keep their combining marks and drop their U+0020/U+0640.
+Keys are 505 of the 519 presentation-form ligature codepoints (494 assigned
+in unicodedataplus 16.0.0 plus 25 Unicode 17.0 additions) minus the 14
+excluded ones; values are base-character sequences (448 entries) or the
+empty string (57 honorific/phrase entries). Mark-bearing decompositions keep
+their combining marks and drop their U+0020/U+0640.
 """
 
 LIGATURE_TRANSLATION_TABLE: dict[int, str] = {
@@ -801,8 +1305,8 @@ def normalizeUrduChars(text: str) -> str:
         return ""
 
     # Step 1: Handle Ligature Presentation Forms
-    # LIGATURE_MAP is a single-pass translation table built at import time
-    # from the Unicode decomposition fields: keys are single ligature
+    # LIGATURE_MAP is a single-pass translation table authored as literals
+    # from the Unicode decomposition data: keys are single ligature
     # presentation form characters (e.g., lam-alef U+FEFB) and values are the
     # base character sequences they decompose into (e.g., "لا"), with the
     # compatibility tags stripped. Honorific/phrase ligatures map to "" and

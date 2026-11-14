@@ -342,7 +342,12 @@ class TestUrduVariantMap:
                 seen[variant] = base
 
     def testEveryCodepointHasOfficialUnicodeName(self):
-        """Test that every codepoint in both maps is an assigned character with an official name."""
+        """Test that every codepoint in both maps is an assigned character with an official name.
+
+        Exception: the Unicode 17.0 honorific ligatures are deliberately kept
+        as deleted literals although unicodedata 16.0.0 leaves them
+        unassigned (see TestLigatureCoverage).
+        """
         codepoints = set()
         for base, variants in URDU_VARIANT_MAP.items():
             if base:
@@ -351,9 +356,10 @@ class TestUrduVariantMap:
         for ligature, replacement in LIGATURE_MAP.items():
             codepoints.add(ligature)
             codepoints.update(replacement)
+        v17Deleted = {cp for cp in LIGATURE_DELETED if officialName(cp) is None}
         unassigned = [
             f"U+{ord(codepoint):04X}"
-            for codepoint in sorted(codepoints, key=ord)
+            for codepoint in sorted(codepoints - v17Deleted, key=ord)
             if officialName(codepoint) is None
         ]
         assert not unassigned, f"unassigned codepoints in maps: {unassigned}"
@@ -494,10 +500,12 @@ def ligatureCodepoints():
 class TestLigatureCoverage:
     """Tests pinning the full ligature coverage of the two presentation blocks.
 
-    unicodedataplus 16.0.0 counts 494 assigned ligature codepoints
-    (U+FB50-FDFF and U+FE70-FEFF): 448 decompose to base-character
-    sequences, 32 honorific/phrase ligatures are deleted to '', and 14
-    Uyghur/non-Urdu ligatures are excluded from the table entirely.
+    The ligature set is 519 codepoints: 494 assigned ligature codepoints
+    (U+FB50-FDFF and U+FE70-FEFF, unicodedataplus 16.0.0) plus 25 honorific
+    ligatures added in Unicode 17.0 that are unassigned in unicodedataplus
+    16.0.0 (U+FBC3-FBD2, U+FD90-FD91, U+FDC8-FDCE). Of the 519, 448 decompose
+    to base-character sequences, 57 honorific/phrase ligatures are deleted to
+    '', and 14 Uyghur/non-Urdu ligatures are excluded from the table entirely.
     """
 
     def testExcludedRegistryPinsExactlyTheFourteenNonUrduLigatures(self):
@@ -510,10 +518,14 @@ class TestLigatureCoverage:
         }
         assert {ord(c) for c in LIGATURE_EXCLUDED} == expected
 
-    def testDeletedRegistryPinsExactlyTheThirtyTwoHonorificLigatures(self):
+    def testDeletedRegistryPinsExactlyTheFiftySevenHonorificLigatures(self):
         """Test that LIGATURE_DELETED is exactly the honorific, invocation,
-        and standalone-word ligature groups."""
+        and standalone-word ligature groups, including the Unicode 17.0
+        additions."""
         expected = {
+            *range(0xFBC3, 0xFBD3),  # honorifics (Unicode 17.0)
+            0xFD90, 0xFD91,  # honorifics (Unicode 17.0)
+            *range(0xFDC8, 0xFDCF),  # honorifics (Unicode 17.0)
             *range(0xFD40, 0xFD50),  # honorific/invocation ligatures
             0xFDCF,  # SALAAMUHU ALAYNAA
             *range(0xFDF0, 0xFDFC),  # standalone words and phrases (incl. ALLAH)
@@ -521,19 +533,44 @@ class TestLigatureCoverage:
         }
         assert {ord(c) for c in LIGATURE_DELETED} == expected
 
+    def testUnicodeSeventeenLigaturesAreUnassignedYetDeleted(self):
+        """Test the version skew explicitly: the 25 Unicode 17.0 honorific
+        ligatures are unassigned in the installed unicodedata (16.0.0), so
+        their names cannot be looked up, yet they must be present in
+        LIGATURE_MAP with '' values (version-independent deletion)."""
+        v17 = {
+            *range(0xFBC3, 0xFBD3),
+            0xFD90, 0xFD91,
+            *range(0xFDC8, 0xFDCF),
+        }
+        assert len(v17) == 25
+        for codepoint in v17:
+            assert officialName(chr(codepoint)) is None, f"U+{codepoint:04X}"
+            assert LIGATURE_MAP.get(chr(codepoint)) == "", f"U+{codepoint:04X}"
+
     def testEveryLigatureCodepointIsAccountedFor(self):
         """Test that mapped, deleted, and excluded classes partition the
-        494 ligature codepoints with no overlap and no silent gaps."""
+        519 ligature codepoints with no overlap and no silent gaps: the 494
+        assigned codepoints of the two ranges plus the 25 Unicode 17.0
+        additions, which are deleted literals despite being unassigned in
+        unicodedata 16.0.0."""
         ligatures = set(ligatureCodepoints())
+        v17 = {
+            *range(0xFBC3, 0xFBD3),
+            0xFD90, 0xFD91,
+            *range(0xFDC8, 0xFDCF),
+        }
         mapped = {ord(c) for c, replacement in LIGATURE_MAP.items() if replacement}
         deleted = {ord(c) for c, replacement in LIGATURE_MAP.items() if not replacement}
         excluded = {ord(c) for c in LIGATURE_EXCLUDED}
         assert len(ligatures) == 494
+        assert len(v17) == 25
+        assert len(mapped) + len(deleted) + len(excluded) == 519
         assert not mapped & deleted, "a codepoint cannot be both mapped and deleted"
         assert not mapped & excluded, "a codepoint cannot be both mapped and excluded"
         assert not deleted & excluded, "a codepoint cannot be both deleted and excluded"
-        missing = sorted(f"U+{cp:04X}" for cp in ligatures - (mapped | deleted | excluded))
-        assert mapped | deleted | excluded == ligatures, f"silent gaps: {missing}"
+        missing = sorted(f"U+{cp:04X}" for cp in (ligatures | v17) - (mapped | deleted | excluded))
+        assert mapped | deleted | excluded == ligatures | v17, f"silent gaps: {missing}"
 
     def testDeletedEntriesMapToEmptyString(self):
         """Test that every registry entry of LIGATURE_DELETED maps to '' in the table."""
@@ -542,8 +579,8 @@ class TestLigatureCoverage:
 
     def testDeletedEntriesAreCompleteWordsAndVanishUnderNormalize(self):
         """Test that honorific and phrase ligatures are stripped outright
-        by the full pipeline."""
-        for codepoint in (0xFD40, 0xFDCF, 0xFDF2, 0xFDFD, 0xFDFA):
+        by the full pipeline, including a Unicode 17.0 addition."""
+        for codepoint in (0xFBC3, 0xFD40, 0xFDCF, 0xFDF2, 0xFDFD, 0xFDFA):
             assert normalize(chr(codepoint)) == "", f"U+{codepoint:04X}"
 
     def testMarkBearingLigaturesMapToMarksOnly(self):

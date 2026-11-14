@@ -10,17 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 ### Changed
 - Declare pytest configuration in `pyproject.toml` (`testpaths`, `pythonpath`)
 - `LIGATURE_MAP` in `romanalfaz.urduspell` now covers the full Arabic
-  presentation-form ligature set: the table is built at import time from the
-  Unicode decomposition fields (`unicodedata` 16.0.0 data via
-  `unicodedataplus`) instead of the hand-written 4-entry lam-alef map, and
-  `normalizeUrduChars` applies it in a single `str.translate` pass. Of the 494
-  ligature codepoints in U+FB50-FDFF / U+FE70-FEFF, 448 decompose to their
+  presentation-form ligature set: a static, literal table (authored from the
+  Unicode decomposition data, `unicodedata` 16.0.0 via `unicodedataplus`,
+  plus the Unicode 17.0 additions) replacing the hand-written 4-entry
+  lam-alef map, applied by `normalizeUrduChars` in a single `str.translate`
+  pass. Of the 519 ligature codepoints, 448 decompose to their
   base-character sequences (mark-bearing ligatures keep their combining marks
   but drop the decomposition's U+0020/U+0640, so no space or tatweel is
-  emitted), 32 honorific/phrase ligatures (U+FD40-FD4F, U+FDCF, U+FDF0-FDFB,
-  U+FDFD-FDFF) map to `""` and are stripped, and 14 non-Urdu ligatures
-  (U+FBEC-FBED, U+FBF0-FBFB, the Uyghur/Kazakh/Kirghiz series) are excluded
-  and pass through untouched. U+FDFC (RIAL SIGN, not a ligature) has no entry.
+  emitted), 57 honorific/phrase ligatures (U+FBC3-FBD2, U+FD90-FD91,
+  U+FD40-FD4F, U+FDC8-FDCE, U+FDCF, U+FDF0-FDFB, U+FDFD-FDFF) map to `""`
+  and are stripped, and 14 non-Urdu ligatures (U+FBEC-FBED, U+FBF0-FBFB, the
+  Uyghur/Kazakh/Kirghiz series) are excluded and pass through untouched.
+  U+FDFC (RIAL SIGN, not a ligature) has no entry.
 - `URDU_VARIANT_MAP` gains one sanctioned exception enabling full lam-alef
   coverage: bare U+0623 (ALEF WITH HAMZA ABOVE) and U+0625 (ALEF WITH HAMZA
   BELOW) fold to U+0627, so all eight U+FEF5-FEFC ligatures normalize to
