@@ -437,7 +437,6 @@ This mapping defines which characters are retained during text normalization
 for processing, effectively filtering out visual representations.
 """
 
-# LIGATURE MAP START
 
 # ******************************************************************************
 # The Arabic presentation-form ranges (U+FB50-FDFF and U+FE70-FEFF) contain
