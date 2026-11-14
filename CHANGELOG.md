@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+## [0.2.0a1] - 2026-11-15
+
 ### Changed
 - Declare pytest configuration in `pyproject.toml` (`testpaths`, `pythonpath`)
 - `LIGATURE_MAP` in `romanalfaz.urduspell` now covers the full Arabic
